@@ -1,19 +1,25 @@
 const Timeouts = require('platform/testing/e2e/timeouts.js');
 
+/* eslint-disable class-methods-use-this */
 class TrackClaimsPage {
   loadPage(claimsList, mock = null, submitForm = false) {
     if (submitForm) {
-      cy.intercept('POST', `/v0/evss_claims/11/request_decision`, {
+      cy.intercept('POST', `/v0/evss_claims/189685/request_decision`, {
         body: {},
       }).as('askVA');
     }
     if (mock) {
-      cy.intercept('GET', `/v0/evss_claims_async/11`, mock).as('detailRequest');
+      cy.intercept('GET', `/v0/evss_claims_async/189685`, mock).as(
+        'detailRequest',
+      );
     }
     cy.intercept('GET', '/v0/evss_claims_async', claimsList);
     cy.login();
     cy.visit('/track-claims');
-    cy.title().should('eq', 'Track Claims: VA.gov');
+    cy.title().should(
+      'eq',
+      'Check your claim or appeal status | Veterans Affairs',
+    );
     if (claimsList.data.length) {
       cy.get('.claim-list-item-container', { timeout: Timeouts.slow }).should(
         'be.visible',
@@ -68,21 +74,6 @@ class TrackClaimsPage {
     );
   }
 
-  checkConsolidatedClaimsModal() {
-    cy.get('button.claims-combined').click();
-    cy.get('.claims-status-upload-header').should('be.visible');
-    cy.injectAxeThenAxeCheck();
-    cy.get('.claims-status-upload-header').should(
-      'contain',
-      'A note about consolidated claims',
-    );
-    cy.get('.va-modal-close')
-      .first()
-      .click();
-    cy.get('.claims-status.upload-header').should('not.exist');
-    cy.axeCheck();
-  }
-
   checkClaimsContent() {
     cy.get('.claims-container-title').should(
       'contain',
@@ -95,7 +86,7 @@ class TrackClaimsPage {
     cy.get('.claim-list-item-container:first-child a.vads-c-action-link--blue')
       .click()
       .then(() => {
-        cy.url().should('contain', '/your-claims/11/status');
+        cy.url().should('contain', '/your-claims/189685/status');
       });
   }
 
@@ -130,12 +121,12 @@ class TrackClaimsPage {
         cy.injectAxeThenAxeCheck();
       });
 
-    cy.url().should('contain', '/your-claims/11/status');
+    cy.url().should('contain', '/your-claims/189685/status');
 
     // Disabled until COVID-19 message removed
     // cy.get('.claim-completion-desc').should('contain', 'We estimated your claim would be completed by now');
     if (inProgress) {
-      cy.get('va-alert').should('contain', 'COVID-19 has had on');
+      cy.get('va-alert').should('contain', 'because of COVID-19');
     }
   }
 
@@ -165,13 +156,14 @@ class TrackClaimsPage {
   }
 
   verifyClosedClaim() {
-    cy.get('li.list-one')
+    cy.get('li.list-one .section-header-button')
       .click()
       .then(() => {
         cy.get('li.list-one .claims-evidence', {
           timeout: Timeouts.slow,
         }).should('be.visible');
-        cy.get('.claims-evidence:nth-child(3) .claims-evidence-item').should(
+        cy.get('.claim-older-updates').click();
+        cy.get('#older-updates-1 li:nth-child(2) .claims-evidence-item').should(
           'contain',
           'Your claim is closed',
         );
@@ -213,7 +205,7 @@ class TrackClaimsPage {
   }
 
   verifyClaimEvidence(claimId, claimStatus) {
-    cy.get('.submit-additional-evidence .usa-alert').should('be.visible');
+    cy.get('.submit-additional-evidence va-alert').should('be.visible');
     cy.get(
       `.submitted-file-list-item:nth-child(${claimId}) .submission-status`,
     ).should('contain', `${claimStatus}`);
@@ -226,7 +218,7 @@ class TrackClaimsPage {
         cy.get('.claim-details').should('be.visible');
         cy.injectAxeThenAxeCheck();
       });
-    cy.url().should('contain', '/your-claims/11/details');
+    cy.url().should('contain', '/your-claims/189685/details');
   }
 
   verifyClaimDetails() {
@@ -300,3 +292,4 @@ class TrackClaimsPage {
 }
 
 export default TrackClaimsPage;
+/* eslint-enable class-methods-use-this */

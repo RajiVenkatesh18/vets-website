@@ -1,9 +1,10 @@
 import moment from 'moment';
+import Timeouts from 'platform/testing/e2e/timeouts';
 
 const today = moment();
 
 export function chooseTypeOfCareTest(label) {
-  cy.url().should('include', '/new-appointment');
+  cy.url().should('include', '/new-appointment', { timeout: Timeouts.slow });
   cy.axeCheckBestPractice();
   cy.findByLabelText(label)
     .focus()
@@ -28,10 +29,10 @@ export function chooseVAFacilityTest() {
   cy.findByText(/Continue/).click();
 }
 
-export function chooseVAFacilityV2Test() {
+export function chooseVAFacilityV2Test(label) {
   cy.url().should('include', '/va-facility-2');
   cy.axeCheckBestPractice();
-  cy.get('#root_vaFacility_3')
+  cy.findByLabelText(label)
     .focus()
     .click();
   cy.findByText(/Continue/).click();
@@ -127,6 +128,16 @@ export function contactInfoTest() {
 export function contactInfoDirectScheduleTest() {
   cy.url().should('include', '/contact-info');
   cy.axeCheckBestPractice();
+
+  // Adding this to solve weird timing error. These fields should be pre-populated but
+  // sometimes they are not.
+  cy.get('#root_phoneNumber')
+    .clear()
+    .type('5035551234');
+  cy.get('#root_email')
+    .clear()
+    .type('veteran@gmail.com');
+
   // cy.findByLabelText(/Morning/).click();
   cy.findByText(/Continue/).click();
 }
@@ -137,10 +148,19 @@ export function reviewTest() {
   cy.findByText('Confirm appointment').click();
 }
 
-export function confirmationPageV2Test(fullReason) {
-  cy.findByText('Your appointment has been scheduled and is confirmed.');
-  cy.findByText('VA Appointment');
-  cy.findByText('Your reason for your visit');
-  cy.findByText(fullReason);
-  cy.axeCheckBestPractice();
+export function confirmationPageV2Test(
+  fullReason = '',
+  isAppointmentRequest = true,
+) {
+  if (isAppointmentRequest) {
+    cy.findByText('We’ve scheduled and confirmed your appointment.');
+    cy.findByText('VA Appointment');
+    cy.findByText('Your reason for your visit');
+    cy.findByText(fullReason);
+    cy.axeCheckBestPractice();
+  } else {
+    cy.findByText('We’ve scheduled and confirmed your appointment.');
+    cy.findByRole('heading', { level: 2, name: /VA Appointment/i });
+    cy.axeCheckBestPractice();
+  }
 }

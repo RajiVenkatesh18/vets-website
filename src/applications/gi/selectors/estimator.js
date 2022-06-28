@@ -5,7 +5,7 @@ const getConstants = state => state.constants.constants;
 const getEligibilityDetails = state => state.eligibility;
 
 const getRequiredAttributes = (state, props) => {
-  const { type, bah, dodBah, country } = props;
+  const { type, bah, dodBah, country } = props.institution;
   return {
     type: type && type.toLowerCase(),
     bah,
@@ -79,6 +79,13 @@ export function getDerivedAttributes(constant, eligibility, institution) {
         monthlyRate = 0;
       } else {
         monthlyRate = constant.DEARATEFULLTIME;
+      }
+
+      if (
+        (your.militaryStatus === 'child' || your.militaryStatus === 'spouse') &&
+        its.country === 'philippines'
+      ) {
+        monthlyRate /= 2;
       }
       break;
     case 31:

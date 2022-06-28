@@ -3,5 +3,6 @@
   "entryFile": "./app-entry.jsx",
   "entryName": "view-payments",
   "rootUrl": "/va-payment-history/payments",
-  "production": false
+  "production": false,
+  "productId": "def80a4c-2174-40cd-b241-892faa4d52d4"
 }

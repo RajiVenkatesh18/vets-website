@@ -29,6 +29,7 @@ export const itfStatuses = {
   claimRecieved: 'claim_recieved',
   duplicate: 'duplicate',
   incomplete: 'incomplete',
+  canceled: 'canceled',
 };
 
 export const RESERVE_GUARD_TYPES = {
@@ -308,9 +309,6 @@ export const EBEN_526_PATH =
 
 export const BDD_INFO_URL =
   '/disability/how-to-file-claim/when-to-file/pre-discharge-claim/';
-
-// PDF upload limit feature
-export const PDF_SIZE_FEATURE = 'pdfSizeFeature';
 
 // maxLength from schema
 export const CHAR_LIMITS = [

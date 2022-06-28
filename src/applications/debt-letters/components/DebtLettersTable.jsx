@@ -1,17 +1,15 @@
 import React, { useState } from 'react';
 import moment from 'moment';
-import orderBy from 'lodash/orderBy';
-
 import environment from 'platform/utilities/environment';
 import recordEvent from 'platform/monitoring/record-event';
+import PropTypes from 'prop-types';
+import { ErrorAlert, DependentDebt, NoDebtLinks } from './Alerts';
 
-export const DebtLettersTable = ({ debtLinks }) => {
-  const [sortBy, setSortBy] = useState('date');
-  const [direction, setDirection] = useState('desc');
+const DebtLettersTable = ({ debtLinks, hasDependentDebts, isError }) => {
+  const hasDebtLinks = !!debtLinks.length;
+  const [showOlder, toggleShowOlderLetters] = useState(false);
 
-  const sortedDebtLinks = orderBy(debtLinks, [sortBy], direction);
-
-  const handleDownloadClick = (type, date) => {
+  const handleDownload = (type, date) => {
     return recordEvent({
       event: 'bam-debt-letter-download',
       'letter-type': type,
@@ -19,86 +17,40 @@ export const DebtLettersTable = ({ debtLinks }) => {
     });
   };
 
-  const toggleDirection = column => {
-    if (column !== sortBy) {
-      setSortBy(column);
-    }
-    if (direction === 'desc') {
-      return setDirection('asc');
-    }
-    return setDirection('desc');
+  const formatDate = date => {
+    return moment(date, 'YYYY-MM-DD').format('MMM D, YYYY');
   };
 
-  return (
-    <table
-      className="vads-u-display--none vads-u-font-family--sans vads-u-margin-top--3 vads-u-margin-bottom--0 medium-screen:vads-u-display--block"
-      role="table"
-    >
-      <thead>
-        <tr role="row">
-          <th
-            className="vads-u-border--0 vads-u-padding-left--3"
-            onClick={() => toggleDirection('date')}
-            tabIndex="-1"
-            scope="row"
-          >
-            Date
-            <i
-              aria-hidden="true"
-              className="fas fa-sort vads-u-margin-left--0p5"
-            />
-          </th>
-          <th
-            className="vads-u-border--0"
-            onClick={() => toggleDirection('typeDescription')}
-            tabIndex="-1"
-            scope="row"
-          >
-            Type
-            <i
-              className="fas fa-sort vads-u-margin-left--0p5"
-              aria-hidden="true"
-            />
-          </th>
-          <th className="vads-u-border--0" scope="row">
-            Action
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {sortedDebtLinks.map(debtLetter => (
-          <tr
-            key={debtLetter.documentId}
-            className="vads-u-border-top--1px vads-u-border-bottom--1px"
-            role="row"
-          >
-            <td className="vads-u-border--0 vads-u-padding-left--3">
-              {moment(debtLetter.receivedAt, 'YYYY-MM-DD').format(
-                'MMM D, YYYY',
-              )}
-            </td>
-            <td className="vads-u-border--0">{debtLetter.typeDescription}</td>
+  const hasMoreThanOneDebt = debtLinks.length > 1;
 
-            <td className="vads-u-border--0">
+  const debtLinksDescending = debtLinks.sort(
+    (d1, d2) => new Date(d2.date).getTime() - new Date(d1.date).getTime(),
+  );
+
+  const [first, second, ...rest] = debtLinksDescending;
+
+  if (isError) return <ErrorAlert />;
+  if (hasDependentDebts) return <DependentDebt />;
+  if (!hasDebtLinks) return <NoDebtLinks />;
+
+  return (
+    <>
+      <h3>Latest debt letters</h3>
+      <ul className="no-bullets" data-testId="debt-letters-table">
+        {[first, second].map(debt => {
+          const recvDate = moment(debt.receivedAt, 'YYYY-MM-DD').format(
+            'MMM D, YYYY',
+          );
+
+          return (
+            <li key={debt.documentId}>
               <a
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() =>
-                  handleDownloadClick(
-                    debtLetter.typeDescription,
-                    moment(debtLetter.receivedAt, 'YYYY-MM-DD').format(
-                      'MMM D, YYYY',
-                    ),
-                  )
-                }
-                download={`${debtLetter.typeDescription} dated ${moment(
-                  debtLetter.receivedAt,
-                  'YYYY-MM-DD',
-                ).format('MMM D, YYYY')}`}
+                onClick={() => handleDownload(debt.typeDescription, recvDate)}
+                download={`${debt.typeDescription} dated ${recvDate}`}
                 href={encodeURI(
-                  `${environment.API_URL}/v0/debt_letters/${
-                    debtLetter.documentId
-                  }`,
+                  `${environment.API_URL}/v0/debt_letters/${debt.documentId}`,
                 )}
               >
                 <i
@@ -106,23 +58,99 @@ export const DebtLettersTable = ({ debtLinks }) => {
                   role="img"
                   className="fas fa-download vads-u-padding-right--1"
                 />
-                <span aria-hidden="true">Download letter </span>
+                <span aria-hidden="true">
+                  {`${recvDate} - ${debt.typeDescription}`}{' '}
+                </span>
                 <span className="sr-only">
-                  Download {debtLetter.typeDescription} dated
-                  <span className="vads-u-margin-left--0p5">
-                    {moment(debtLetter.receivedAt, 'YYYY-MM-DD').format(
-                      'MMM D, YYYY',
-                    )}
-                  </span>
+                  Download {debt.typeDescription} dated
+                  <time dateTime={recvDate} className="vads-u-margin-left--0p5">
+                    {recvDate}
+                  </time>
                 </span>
                 <dfn>
                   <abbr title="Portable Document Format">(PDF)</abbr>
                 </dfn>
               </a>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+            </li>
+          );
+        })}
+      </ul>
+
+      {hasMoreThanOneDebt ? (
+        <>
+          <h5 className="vads-u-margin-top--2p5">
+            {`Older letters (${debtLinks.length - 2})`}
+          </h5>
+          <button
+            type="button"
+            className="debt-older-letters usa-button-secondary"
+            aria-controls="older-letters-button"
+            aria-expanded={showOlder}
+            onClick={() => toggleShowOlderLetters(!showOlder)}
+          >
+            {`${showOlder ? 'Hide' : 'Show'} older letters`}
+          </button>
+        </>
+      ) : null}
+
+      {showOlder && hasMoreThanOneDebt ? (
+        <ol id="older-letters-list" className="no-bullets">
+          {rest.map((debt, index) => (
+            <li key={index}>
+              <div>
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() =>
+                    handleDownload(debt.typeDescription, formatDate(debt.date))
+                  }
+                  download={`${debt.typeDescription} dated ${formatDate(
+                    debt.date,
+                  )}`}
+                  href={encodeURI(
+                    `${environment.API_URL}/v0/debt_letters/${debt.documentId}`,
+                  )}
+                >
+                  <i
+                    aria-hidden="true"
+                    role="img"
+                    className="fas fa-download vads-u-padding-right--1"
+                  />
+                  <span aria-hidden="true">
+                    {`${formatDate(debt.date)} - ${debt.typeDescription}`}{' '}
+                  </span>
+                  <span className="sr-only">
+                    Download {debt.typeDescription} dated
+                    <time
+                      dateTime={formatDate(debt.date)}
+                      className="vads-u-margin-left--0p5"
+                    >
+                      {formatDate(debt.date)}
+                    </time>
+                  </span>
+                  <dfn>
+                    <abbr title="Portable Document Format">(PDF)</abbr>
+                  </dfn>
+                </a>
+              </div>
+            </li>
+          ))}
+        </ol>
+      ) : null}
+    </>
   );
 };
+
+DebtLettersTable.propTypes = {
+  debtLinks: PropTypes.arrayOf(
+    PropTypes.shape({
+      documentId: PropTypes.string,
+      receivedAt: PropTypes.string,
+      typeDescription: PropTypes.string,
+    }),
+  ),
+  hasDependentDebts: PropTypes.bool,
+  isError: PropTypes.bool,
+};
+
+export default DebtLettersTable;

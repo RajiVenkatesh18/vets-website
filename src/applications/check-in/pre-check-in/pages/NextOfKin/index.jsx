@@ -1,99 +1,81 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 
-import { focusElement } from 'platform/utilities/ui';
 import recordEvent from 'platform/monitoring/record-event';
 
-import { recordAnswer } from '../../actions';
+import { recordAnswer } from '../../../actions/universal';
 
-import { api } from '../../api/';
-
-import BackButton from '../../components/BackButton';
-import BackToHome from '../../components/BackToHome';
-import Footer from '../../components/Footer';
+import BackButton from '../../../components/BackButton';
+import BackToHome from '../../../components/BackToHome';
+import Footer from '../../../components/layout/Footer';
 import NextOfKinDisplay from '../../../components/pages/nextOfKin/NextOfKinDisplay';
 
-import { useFormRouting } from '../../hooks/useFormRouting';
+import { useFormRouting } from '../../../hooks/useFormRouting';
 
 import {
   makeSelectCurrentContext,
   makeSelectVeteranData,
-  makeSelectForm,
-} from '../../selectors';
-
+  makeSelectPendingEdits,
+} from '../../../selectors';
 import { makeSelectFeatureToggles } from '../../../utils/selectors/feature-toggles';
+
+import { api } from '../../../api';
 
 const NextOfKin = props => {
   const { router } = props;
+  const { t } = useTranslation();
 
-  const [isSendingData, setIsSendingData] = useState(false);
-
-  const selectCurrentContext = useMemo(makeSelectCurrentContext, []);
-  const { token } = useSelector(selectCurrentContext);
-
-  const selectForm = useMemo(makeSelectForm, []);
-  const { data } = useSelector(selectForm);
-  const { demographicsUpToDate } = data;
+  const [isLoading, setIsLoading] = useState(false);
 
   const selectVeteranData = useMemo(makeSelectVeteranData, []);
   const { demographics } = useSelector(selectVeteranData);
   const { nextOfKin1: nextOfKin } = demographics;
 
+  const selectPendingEdits = useMemo(makeSelectPendingEdits, []);
+  const { pendingEdits } = useSelector(selectPendingEdits);
+  const { nextOfKin1: newInformation } = pendingEdits || {};
+
   const selectFeatureToggles = useMemo(makeSelectFeatureToggles, []);
-  const { isEmergencyContactEnabled } = useSelector(selectFeatureToggles);
+  const { isEditingPreCheckInEnabled } = useSelector(selectFeatureToggles);
 
   const dispatch = useDispatch();
 
-  const {
-    currentPage,
-    goToErrorPage,
-    goToNextPage,
-    goToPreviousPage,
-  } = useFormRouting(router);
+  const { goToNextPage, goToPreviousPage, jumpToPage } = useFormRouting(router);
 
-  useEffect(() => {
-    focusElement('h1');
-  }, []);
+  const selectContext = useMemo(makeSelectCurrentContext, []);
+  const { token } = useSelector(selectContext);
 
   const buttonClick = useCallback(
     async answer => {
-      setIsSendingData(true);
+      setIsLoading(true);
       recordEvent({
         event: 'cta-button-click',
         'button-click-label': `${answer}-to-next-of-kin`,
       });
-      dispatch(recordAnswer({ nextOfKinUpToDate: `${answer}` }));
-      // select the answers from state
-      if (isEmergencyContactEnabled) {
+      if (isEditingPreCheckInEnabled) {
+        setIsLoading(true);
+        if (newInformation) {
+          await api.v2.postDemographicsData({
+            demographics: {
+              nextOfKin1: newInformation,
+            },
+            token,
+          });
+        }
+        await api.v2.postPreCheckInData({
+          uuid: token,
+          nextOfKinUpToDate: true,
+        });
+        dispatch(recordAnswer({ nextOfKinUpToDate: `${answer}` }));
         goToNextPage();
       } else {
-        // send to API
-        const preCheckInData = {
-          uuid: token,
-          demographicsUpToDate: demographicsUpToDate === 'yes',
-          nextOfKinUpToDate: answer === 'yes',
-        };
-        try {
-          const resp = await api.v2.postPreCheckInData({ ...preCheckInData });
-          if (resp.data.error || resp.data.errors) {
-            goToErrorPage();
-          } else {
-            goToNextPage();
-          }
-        } catch (error) {
-          goToErrorPage();
-        }
+        dispatch(recordAnswer({ nextOfKinUpToDate: `${answer}` }));
+        goToNextPage();
       }
     },
-    [
-      dispatch,
-      goToErrorPage,
-      goToNextPage,
-      isEmergencyContactEnabled,
-      token,
-      demographicsUpToDate,
-    ],
+    [dispatch, goToNextPage, isEditingPreCheckInEnabled, newInformation, token],
   );
 
   const yesClick = useCallback(
@@ -108,21 +90,24 @@ const NextOfKin = props => {
     },
     [buttonClick],
   );
-  const header = 'Is this your current next of kin?';
-  const subtitle =
-    'This helps us keep information about your next of kin up to date.';
+  const header = t('is-this-your-current-next-of-kin');
+  const subtitle = t(
+    'this-helps-us-keep-information-about-your-next-of-kin-up-to-date',
+  );
 
   return (
     <>
-      <BackButton action={goToPreviousPage} path={currentPage} />
+      <BackButton action={goToPreviousPage} router={router} />
       <NextOfKinDisplay
         Footer={Footer}
         header={header}
         subtitle={subtitle}
-        nextOfKin={nextOfKin}
+        nextOfKin={newInformation || nextOfKin}
         yesAction={yesClick}
         noAction={noClick}
-        isSendingData={isSendingData}
+        isLoading={isLoading}
+        isEditEnabled={isEditingPreCheckInEnabled}
+        jumpToPage={jumpToPage}
       />
       <BackToHome />
     </>

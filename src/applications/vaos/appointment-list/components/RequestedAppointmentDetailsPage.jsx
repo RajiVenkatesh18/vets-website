@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { shallowEqual, useDispatch, useSelector } from 'react-redux';
-import LoadingIndicator from '@department-of-veterans-affairs/component-library/LoadingIndicator';
+
 import moment from 'moment';
+import { VaTelephone } from '@department-of-veterans-affairs/component-library/dist/react-bindings';
+import recordEvent from 'platform/monitoring/record-event';
 import {
   APPOINTMENT_STATUS,
   APPOINTMENT_TYPES,
@@ -29,9 +31,8 @@ import {
   confirmCancelAppointment,
   fetchRequestDetails,
 } from '../redux/actions';
-import Telephone from '@department-of-veterans-affairs/component-library/Telephone';
-import recordEvent from 'platform/monitoring/record-event';
 import RequestedStatusAlert from './RequestedStatusAlert';
+import { getTypeOfCareById } from '../../utils/appointment';
 
 const TIME_TEXT = {
   AM: 'in the morning',
@@ -48,6 +49,7 @@ export default function RequestedAppointmentDetailsPage() {
     cancelInfo,
     appointment,
     message,
+    useV2,
   } = useSelector(
     state => selectRequestedAppointmentDetails(state, id),
     shallowEqual,
@@ -115,8 +117,8 @@ export default function RequestedAppointmentDetailsPage() {
   if (!appointment || appointmentDetailsStatus === FETCH_STATUS.loading) {
     return (
       <FullWidthLayout>
-        <LoadingIndicator
-          setFocus
+        <va-loading-indicator
+          set-focus
           message="Loading your appointment request..."
         />
       </FullWidthLayout>
@@ -133,9 +135,11 @@ export default function RequestedAppointmentDetailsPage() {
     appointment.vaos.appointmentType === APPOINTMENT_TYPES.ccRequest;
   const provider = appointment.preferredCommunityCareProviders?.[0];
   const comment = message || appointment.comment;
-  const apptDetails = comment
-    ? `${appointment.reason}: ${comment}`
-    : appointment.reason;
+  const apptDetails =
+    appointment.reason && comment
+      ? `${appointment.reason}: ${comment}`
+      : comment || (appointment.reason ? appointment.reason : null);
+  const typeOfCare = getTypeOfCareById(appointment.vaos.apiData.serviceType);
 
   return (
     <PageLayout>
@@ -164,6 +168,17 @@ export default function RequestedAppointmentDetailsPage() {
 
       {isCCRequest ? (
         <>
+          {useV2 && (
+            <>
+              <h2
+                className="vads-u-font-size--base vads-u-font-family--sans vads-u-margin-bottom--0"
+                data-cy="community-care-appointment-details-header"
+              >
+                <div className="vads-u-display--inline">Type of care</div>
+              </h2>
+              <div>{typeOfCare?.name}</div>
+            </>
+          )}
           <h2 className="vaos-appts__block-label vads-u-margin-bottom--0 vads-u-margin-top--2">
             Preferred community care provider
           </h2>
@@ -192,7 +207,7 @@ export default function RequestedAppointmentDetailsPage() {
         {appointment.requestedPeriod.map((option, optionIndex) => (
           <li key={`${appointment.id}-option-${optionIndex}`}>
             {moment(option.start).format('ddd, MMMM D, YYYY')}{' '}
-            {option.start.includes('00:00:00') ? TIME_TEXT.AM : TIME_TEXT.PM}
+            {moment(option.start).hour() < 12 ? TIME_TEXT.AM : TIME_TEXT.PM}
           </li>
         ))}
       </ul>
@@ -215,9 +230,10 @@ export default function RequestedAppointmentDetailsPage() {
         <h3 className="vads-u-font-family--sans vads-u-display--inline vads-u-font-size--base">
           Phone number:{' '}
         </h3>
-        <Telephone
+        <VaTelephone
           notClickable
           contact={getPatientTelecom(appointment, 'phone')}
+          data-testid="patient-telephone"
         />
         <br />
         <ListBestTimeToCall

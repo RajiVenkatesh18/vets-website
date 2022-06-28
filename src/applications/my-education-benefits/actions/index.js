@@ -1,7 +1,7 @@
 import { apiRequest } from 'platform/utilities/api';
 import environment from 'platform/utilities/environment';
 
-const CLAIMANT_INTO_ENDPOINT = `${
+export const CLAIMANT_INFO_ENDPOINT = `${
   environment.API_URL
 }/meb_api/v0/claimant_info`;
 
@@ -26,36 +26,56 @@ export const CLAIM_STATUS_RESPONSE_DENIED = 'DENIED';
 export const CLAIM_STATUS_RESPONSE_IN_PROGRESS = 'INPROGRESS';
 export const CLAIM_STATUS_RESPONSE_ERROR = 'ERROR';
 
-const ONE_MINUTE_IN_THE_FUTURE = new Date(new Date().getTime() + 60000);
+const ELIGIBILITY_ENDPOINT = `${environment.API_URL}/meb_api/v0/eligibility`;
+export const FETCH_ELIGIBILITY = 'FETCH_ELIGIBILITY';
+export const FETCH_ELIGIBILITY_SUCCESS = 'FETCH_ELIGIBILITY_SUCCESS';
+export const FETCH_ELIGIBILITY_FAILURE = 'FETCH_ELIGIBILITY_FAILURE';
+export const ELIGIBILITY = {
+  CHAPTER30: 'Chapter30',
+  CHAPTER33: 'Chapter33',
+  CHAPTER1606: 'Chapter1606',
+};
+
 const FIVE_SECONDS = 5000;
+const ONE_MINUTE_IN_THE_FUTURE = () => {
+  return new Date(new Date().getTime() + 60000);
+};
 
 export function fetchPersonalInformation() {
   return async dispatch => {
     dispatch({ type: FETCH_PERSONAL_INFORMATION });
-
-    return apiRequest(CLAIMANT_INTO_ENDPOINT)
-      .then(response =>
-        dispatch({
-          type: FETCH_PERSONAL_INFORMATION_SUCCESS,
-          response,
-        }),
-      )
-      .catch(errors =>
+    return apiRequest(CLAIMANT_INFO_ENDPOINT)
+      .then(response => {
+        if (!response?.data?.attributes?.claimant) {
+          window.location.href =
+            '/education/apply-for-education-benefits/application/1990/';
+        } else {
+          dispatch({
+            type: FETCH_PERSONAL_INFORMATION_SUCCESS,
+            response,
+          });
+        }
+      })
+      .catch(errors => {
         dispatch({
           type: FETCH_PERSONAL_INFORMATION_FAILED,
           errors,
-        }),
-      );
+        });
+        window.location.href =
+          '/education/apply-for-education-benefits/application/1990/';
+      });
   };
 }
 
 const poll = ({
   endpoint,
-  validate,
+  validate = response => response && response.data,
   interval = FIVE_SECONDS,
-  endTime = ONE_MINUTE_IN_THE_FUTURE,
+  endTime = ONE_MINUTE_IN_THE_FUTURE(),
   dispatch,
   timeoutResponse,
+  successDispatchType,
+  failureDispatchType,
 }) => {
   // eslint-disable-next-line consistent-return
   const executePoll = async (resolve, reject) => {
@@ -63,7 +83,8 @@ const poll = ({
 
     if (validate(response)) {
       return resolve(response.data);
-    } else if (new Date() >= endTime) {
+    }
+    if (new Date() >= endTime) {
       return resolve(timeoutResponse);
     }
 
@@ -73,33 +94,63 @@ const poll = ({
   return new Promise(executePoll)
     .then(response => {
       return dispatch({
-        type: FETCH_CLAIM_STATUS_SUCCESS,
+        type: successDispatchType,
         response,
       });
     })
     .catch(errors => {
       dispatch({
-        type: FETCH_CLAIM_STATUS_FAILURE,
+        type: failureDispatchType,
         errors,
       });
     });
 };
 
+function getNowDate() {
+  const date = new Date();
+  return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+}
+
 export function fetchClaimStatus() {
   return async dispatch => {
     dispatch({ type: FETCH_CLAIM_STATUS });
     const timeoutResponse = {
-      claimStatus: CLAIM_STATUS_RESPONSE_IN_PROGRESS,
-      receivedDate: Date.now(),
+      attributes: {
+        claimStatus: CLAIM_STATUS_RESPONSE_IN_PROGRESS,
+        receivedDate: getNowDate(),
+      },
     };
 
     poll({
       endpoint: CLAIM_STATUS_ENDPOINT,
       validate: response =>
-        response.data &&
-        response.data.claimStatus !== CLAIM_STATUS_RESPONSE_IN_PROGRESS,
+        response?.data?.attributes?.claimStatus &&
+        response.data.attributes.claimStatus !==
+          CLAIM_STATUS_RESPONSE_IN_PROGRESS,
       dispatch,
       timeoutResponse,
+      successDispatchType: FETCH_CLAIM_STATUS_SUCCESS,
+      failureDispatchType: FETCH_CLAIM_STATUS_FAILURE,
     });
+  };
+}
+
+export function fetchEligibility() {
+  return async dispatch => {
+    dispatch({ type: FETCH_ELIGIBILITY });
+
+    return apiRequest(ELIGIBILITY_ENDPOINT)
+      .then(response =>
+        dispatch({
+          type: FETCH_ELIGIBILITY_SUCCESS,
+          response,
+        }),
+      )
+      .catch(errors =>
+        dispatch({
+          type: FETCH_ELIGIBILITY_FAILURE,
+          errors,
+        }),
+      );
   };
 }

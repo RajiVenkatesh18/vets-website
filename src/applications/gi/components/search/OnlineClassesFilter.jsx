@@ -1,8 +1,8 @@
 import React from 'react';
-import RadioButtons from '../RadioButtons';
 import PropTypes from 'prop-types';
-import { renderLearnMoreLabel } from '../../utils/render';
+import RadioButtons from '../RadioButtons';
 import { ariaLabels } from '../../constants';
+import LearnMoreLabel from '../LearnMoreLabel';
 
 function OnlineClassesFilter({
   showModal,
@@ -18,13 +18,13 @@ function OnlineClassesFilter({
 
   return (
     <RadioButtons
-      label={renderLearnMoreLabel({
-        text: radioButtonsLabelText,
-        modal: 'onlineOnlyDistanceLearning',
-        showModal,
-        ariaLabel: ariaLabels.learnMore.onlineOnlyDistanceLearning,
-        component: OnlineClassesFilter,
-      })}
+      label={
+        <LearnMoreLabel
+          text={radioButtonsLabelText}
+          onClick={() => showModal('onlineOnlyDistanceLearning')}
+          ariaLabel={ariaLabels.learnMore.onlineOnlyDistanceLearning}
+        />
+      }
       name="onlineClasses"
       options={options}
       value={onlineClasses}
@@ -36,9 +36,9 @@ function OnlineClassesFilter({
 
 OnlineClassesFilter.propTypes = {
   onlineClasses: PropTypes.string.isRequired,
-  onChange: PropTypes.func,
   showModal: PropTypes.func.isRequired,
   handleInputFocus: PropTypes.func,
+  onChange: PropTypes.func,
 };
 
 export default OnlineClassesFilter;

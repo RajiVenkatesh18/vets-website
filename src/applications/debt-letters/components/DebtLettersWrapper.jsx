@@ -1,11 +1,9 @@
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-import LoadingIndicator from '@department-of-veterans-affairs/component-library/LoadingIndicator';
+import { connect, useDispatch } from 'react-redux';
 import FEATURE_FLAG_NAMES from 'platform/utilities/feature-toggles/featureFlagNames';
 import { toggleValues } from 'platform/site-wide/feature-toggles/selectors';
-import { fetchDebtLetters } from '../actions';
+import { fetchDebtLetters } from '../../combined-debt-portal/combined/actions/debts';
 
 const DebtLettersWrapper = ({
   isPending,
@@ -14,23 +12,28 @@ const DebtLettersWrapper = ({
   showDebtLetters,
   isProfileUpdating,
   isLoggedIn,
-  getDebtLetters,
 }) => {
+  const dispatch = useDispatch();
+
   useEffect(
     () => {
       if (showDebtLetters) {
-        getDebtLetters();
+        const generateFetchDebtLetters = () => {
+          fetchDebtLetters(dispatch);
+        };
+        dispatch(generateFetchDebtLetters);
       }
     },
-    [getDebtLetters, showDebtLetters],
+    [dispatch, showDebtLetters],
   );
 
   if (isPending || isPendingVBMS || isProfileUpdating) {
     return (
       <div className="vads-u-margin--5">
-        <LoadingIndicator
-          setFocus
+        <va-loading-indicator
+          label="Loading"
           message="Please wait while we load the application for you."
+          set-focus
         />
       </div>
     );
@@ -40,9 +43,10 @@ const DebtLettersWrapper = ({
     window.location.replace('/manage-va-debt');
     return (
       <div className="vads-u-margin--5">
-        <LoadingIndicator
-          setFocus
+        <va-loading-indicator
+          label="Loading"
           message="Please wait while we load the application for you."
+          set-focus
         />
       </div>
     );
@@ -65,13 +69,12 @@ const mapStateToProps = state => ({
   ],
 });
 
-const mapDispatchToProps = dispatch => ({
-  ...bindActionCreators({ getDebtLetters: fetchDebtLetters }, dispatch),
-});
-
 DebtLettersWrapper.propTypes = {
-  isPending: PropTypes.bool.isRequired,
-  isPendingVBMS: PropTypes.bool.isRequired,
+  children: PropTypes.array,
+  isLoggedIn: PropTypes.bool,
+  isPending: PropTypes.bool,
+  isPendingVBMS: PropTypes.bool,
+  isProfileUpdating: PropTypes.bool,
   showDebtLetters: PropTypes.bool,
 };
 
@@ -80,7 +83,4 @@ DebtLettersWrapper.defaultProps = {
   isPendingVBMS: false,
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps,
-)(DebtLettersWrapper);
+export default connect(mapStateToProps)(DebtLettersWrapper);

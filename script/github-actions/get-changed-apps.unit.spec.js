@@ -55,7 +55,7 @@ describe('getChangedAppsString', () => {
 
   context('when the entry output type is specified', () => {
     it('should return an empty string when the allow list is empty', () => {
-      const config = { allow: { entryNames: [], rootAppFolders: [] } };
+      const config = { allow: { singleApps: [], groupedApps: [] } };
       const changedFiles = [
         'src/applications/app1/some-file.js',
         'src/applications/app2/some-file.js',
@@ -65,9 +65,12 @@ describe('getChangedAppsString', () => {
       expect(appString).to.be.empty;
     });
 
-    it('should return a comma-delimited string of entry names when multiple apps on the allow list are modified', () => {
+    it('should return a space-delimited string of entry names when multiple apps on the allow list are modified', () => {
       const config = {
-        allow: { entryNames: ['app1', 'app2'], rootAppFolders: [] },
+        allow: {
+          singleApps: [{ entryName: 'app1' }, { entryName: 'app2' }],
+          groupedApps: [],
+        },
       };
       const changedFiles = [
         'src/applications/app1/some-file.js',
@@ -75,11 +78,13 @@ describe('getChangedAppsString', () => {
       ];
 
       const appString = getChangedAppsString(changedFiles, config);
-      expect(appString).to.equal('app1,app2');
+      expect(appString).to.equal('app1 app2');
     });
 
     it('should not duplicate entry names when multiple files in an app are modified', () => {
-      const config = { allow: { entryNames: ['app1'], rootAppFolders: [] } };
+      const config = {
+        allow: { singleApps: [{ entryName: 'app1' }], groupedApps: [] },
+      };
       const changedFiles = [
         'src/applications/app1/some-file.js',
         'src/applications/app1/other-file.js',
@@ -89,11 +94,11 @@ describe('getChangedAppsString', () => {
       expect(appString).to.equal('app1');
     });
 
-    it('should return a comma-delimited string of entry names when files in a grouped app folder are changed', () => {
+    it('should return a space-delimited string of entry names when files in a grouped app folder are changed', () => {
       const config = {
         allow: {
-          entryNames: [],
-          rootAppFolders: ['groupedApps'],
+          singleApps: [],
+          groupedApps: [{ rootFolder: 'groupedApps' }],
         },
       };
       const changedFiles = [
@@ -101,26 +106,29 @@ describe('getChangedAppsString', () => {
       ];
 
       const appString = getChangedAppsString(changedFiles, config);
-      expect(appString).to.equal('groupedApp1,groupedApp2');
+      expect(appString).to.equal('groupedApp1 groupedApp2');
     });
   });
 
   context('when the folder output type is specified', () => {
-    it('should return a comma-delimited string of app folders', () => {
+    it('should return a space-delimited string of app folders', () => {
       const config = {
-        allow: { entryNames: ['app1', 'app2'], rootAppFolders: [] },
+        allow: {
+          singleApps: [{ entryName: 'app1' }, { entryName: 'app2' }],
+          groupedApps: [],
+        },
       };
       const changedFiles = ['src/applications/app1', 'src/applications/app2'];
 
       const appString = getChangedAppsString(changedFiles, config, 'folder');
-      expect(appString).to.equal('src/applications/app1,src/applications/app2');
+      expect(appString).to.equal('src/applications/app1 src/applications/app2');
     });
 
     it('should return the root app path if the changed files are in a grouped app folder', () => {
       const config = {
         allow: {
-          entryNames: [],
-          rootAppFolders: ['groupedApps'],
+          singleApps: [],
+          groupedApps: [{ rootFolder: 'groupedApps' }],
         },
       };
       const changedFiles = [
@@ -132,19 +140,101 @@ describe('getChangedAppsString', () => {
     });
   });
 
-  context('when the url output type is specified', () => {
-    it('should return a comma-delimited string of app URLs', () => {
+  context('when the slack-group output type is specified', () => {
+    it('should return a space-delimited string of app owner Slack groups', () => {
       const config = {
-        allow: { entryNames: ['app1', 'app2'], rootAppFolders: [] },
+        allow: {
+          singleApps: [
+            { entryName: 'app1', slackGroup: '@appTeam1' },
+            { entryName: 'app2', slackGroup: '@appTeam2' },
+          ],
+          groupedApps: [],
+        },
+      };
+      const changedFiles = ['src/applications/app1', 'src/applications/app2'];
+
+      const appString = getChangedAppsString(
+        changedFiles,
+        config,
+        'slack-group',
+      );
+      expect(appString).to.equal('@appTeam1 @appTeam2');
+    });
+
+    it('should return an empty string when the app does not have a Slack group', () => {
+      const config = {
+        allow: { singleApps: [{ entryName: 'app3' }], groupedApps: [] },
+      };
+      const changedFiles = ['src/applications/app3'];
+
+      const appString = getChangedAppsString(
+        changedFiles,
+        config,
+        'slack-group',
+      );
+      expect(appString).to.be.empty;
+    });
+
+    it('should return a Slack group when only one app has a specified Slack group', () => {
+      const config = {
+        allow: {
+          singleApps: [
+            { entryName: 'app1', slackGroup: '@appTeam1' },
+            { entryName: 'app3' },
+          ],
+          groupedApps: [],
+        },
+      };
+      const changedFiles = ['src/applications/app1', 'src/applications/app3'];
+
+      const appString = getChangedAppsString(
+        changedFiles,
+        config,
+        'slack-group',
+      );
+      expect(appString).to.equal('@appTeam1');
+    });
+
+    it('should return a Slack group when files are changed in a grouped app folder', () => {
+      const config = {
+        allow: {
+          singleApps: [],
+          groupedApps: [
+            { rootFolder: 'groupedApps', slackGroup: '@appTeamGrouped' },
+          ],
+        },
+      };
+      const changedFiles = [
+        'src/applications/groupedApps/grouped-app-1/some-file.js',
+      ];
+
+      const appString = getChangedAppsString(
+        changedFiles,
+        config,
+        'slack-group',
+      );
+      expect(appString).to.equal('@appTeamGrouped');
+    });
+  });
+
+  context('when the url output type is specified', () => {
+    it('should return a space-delimited string of app URLs', () => {
+      const config = {
+        allow: {
+          singleApps: [{ entryName: 'app1' }, { entryName: 'app2' }],
+          groupedApps: [],
+        },
       };
       const changedFiles = ['src/applications/app1', 'src/applications/app2'];
 
       const appString = getChangedAppsString(changedFiles, config, 'url');
-      expect(appString).to.equal('/app1,/app2');
+      expect(appString).to.equal('/app1 /app2');
     });
 
     it('should return an empty string when the app does not have a root url', () => {
-      const config = { allow: { entryNames: ['app5'], rootAppFolders: [] } };
+      const config = {
+        allow: { singleApps: [{ entryName: 'app5' }], groupedApps: [] },
+      };
       const changedFiles = ['src/applications/app5'];
 
       const appString = getChangedAppsString(changedFiles, config, 'url');
@@ -153,7 +243,10 @@ describe('getChangedAppsString', () => {
 
     it('should return an app URL string when only one app does not have a root url', () => {
       const config = {
-        allow: { entryNames: ['app1', 'app5'], rootAppFolders: [] },
+        allow: {
+          singleApps: [{ entryName: 'app1' }, { entryName: 'app5' }],
+          groupedApps: [],
+        },
       };
       const changedFiles = ['src/applications/app1', 'src/applications/app5'];
 
@@ -164,8 +257,8 @@ describe('getChangedAppsString', () => {
     it('should return app URLs of all apps if the changed files are in a grouped app folder', () => {
       const config = {
         allow: {
-          entryNames: [],
-          rootAppFolders: ['groupedApps'],
+          singleApps: [],
+          groupedApps: [{ rootFolder: 'groupedApps' }],
         },
       };
       const changedFiles = [
@@ -173,14 +266,41 @@ describe('getChangedAppsString', () => {
       ];
 
       const appString = getChangedAppsString(changedFiles, config, 'url');
-      expect(appString).to.equal('/groupedApp1,/groupedApp2');
+      expect(appString).to.equal('/groupedApp1 /groupedApp2');
+    });
+  });
+
+  context('when the delimiter is specified', () => {
+    it('should return a string delimited by the delimiter', () => {
+      const config = {
+        allow: {
+          singleApps: [{ entryName: 'app1' }, { entryName: 'app2' }],
+          groupedApps: [],
+        },
+      };
+      const changedFiles = [
+        'src/applications/app1/some-file.js',
+        'src/applications/app2',
+      ];
+      const delimiter = ',';
+
+      const appString = getChangedAppsString(
+        changedFiles,
+        config,
+        'entry',
+        delimiter,
+      );
+      expect(appString).to.equal(`app1${delimiter}app2`);
     });
   });
 
   context('when an unknown output type is specified', () => {
     it('should throw an error', () => {
       const config = {
-        allow: { entryNames: ['app1', 'app2'], rootAppFolders: [] },
+        allow: {
+          singleApps: [{ entryName: 'app1' }, { entryName: 'app2' }],
+          groupedApps: [],
+        },
       };
       const changedFiles = ['src/applications/app1', 'src/applications/app2'];
 
@@ -193,7 +313,10 @@ describe('getChangedAppsString', () => {
   context('when apps outside the allow list are modified', () => {
     it('should return an empty string', () => {
       const config = {
-        allow: { entryNames: ['app1', 'app2'], rootAppFolders: [] },
+        allow: {
+          singleApps: [{ entryName: 'app1' }, { entryName: 'app2' }],
+          groupedApps: [],
+        },
       };
       const changedFiles = ['src/applications/app3/some-file.js'];
 
@@ -205,7 +328,10 @@ describe('getChangedAppsString', () => {
   context('when a modified app does not have a manifest file', () => {
     it('should return an empty string', () => {
       const config = {
-        allow: { entryNames: ['app1', 'app2'], rootAppFolders: [] },
+        allow: {
+          singleApps: [{ entryName: 'app1' }, { entryName: 'app2' }],
+          groupedApps: [],
+        },
       };
       const changedFiles = ['src/applications/app4/some-file.js'];
 
@@ -217,7 +343,10 @@ describe('getChangedAppsString', () => {
   context('when non-app code is modified', () => {
     it('should return an empty string', () => {
       const config = {
-        allow: { entryNames: ['app1', 'app2'], rootAppFolders: [] },
+        allow: {
+          singleApps: [{ entryName: 'app1' }, { entryName: 'app2' }],
+          groupedApps: [],
+        },
       };
       const changedFiles = [
         'src/applications/app1',

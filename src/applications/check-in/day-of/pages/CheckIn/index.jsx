@@ -1,57 +1,49 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { connect, useSelector } from 'react-redux';
-
-import { triggerRefresh } from '../../actions';
-
+import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
 import DisplayMultipleAppointments from './DisplayMultipleAppointments';
+import useSendDemographicsFlags from '../../../hooks/useSendDemographicsFlags';
 
-import { makeSelectAppointmentListData } from '../../hooks/selectors';
+import {
+  makeSelectVeteranData,
+  makeSelectCurrentContext,
+} from '../../../selectors';
 
 const CheckIn = props => {
-  const { appointments, isLoading, refreshAppointments, router } = props;
+  const { router } = props;
+  const { t } = useTranslation();
+  const selectVeteranData = useMemo(makeSelectVeteranData, []);
+  const { appointments } = useSelector(selectVeteranData);
+  const selectCurrentContext = useMemo(makeSelectCurrentContext, []);
+  const context = useSelector(selectCurrentContext);
+  useSendDemographicsFlags();
+
   const appointment = appointments ? appointments[0] : {};
-  const selectAppointmentListData = useMemo(makeSelectAppointmentListData, []);
-  const { context } = useSelector(selectAppointmentListData);
+
   const { token } = context;
 
-  const getMultipleAppointments = useCallback(
-    () => {
-      refreshAppointments();
-    },
-    [refreshAppointments],
-  );
-
-  if (isLoading || !appointment) {
+  if (!appointment) {
     return (
-      <va-loading-indicator message={'Loading your appointments for today'} />
-    );
-  } else {
-    return (
-      <DisplayMultipleAppointments
-        router={router}
-        token={token}
-        appointments={appointments}
-        getMultipleAppointments={getMultipleAppointments}
+      <va-loading-indicator
+        message={t('loading-your-appointments-for-today')}
       />
     );
   }
-};
 
-const mapDispatchToProps = dispatch => {
-  return {
-    refreshAppointments: () => dispatch(triggerRefresh()),
-  };
+  return (
+    <DisplayMultipleAppointments
+      router={router}
+      token={token}
+      appointments={appointments}
+    />
+  );
 };
 
 CheckIn.propTypes = {
   appointments: PropTypes.array,
   isLoading: PropTypes.bool,
-  refreshAppointments: PropTypes.func,
   router: PropTypes.object,
 };
 
-export default connect(
-  null,
-  mapDispatchToProps,
-)(CheckIn);
+export default CheckIn;

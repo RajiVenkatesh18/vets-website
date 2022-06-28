@@ -1,4 +1,5 @@
 import moment from 'moment';
+import Timeouts from 'platform/testing/e2e/timeouts';
 import {
   initAppointmentListMock,
   initVaccineAppointmentMock,
@@ -10,11 +11,13 @@ describe('VAOS COVID-19 vaccine appointment flow', () => {
     initAppointmentListMock();
     initVaccineAppointmentMock();
     mockFeatureToggles();
-    cy.visit('health-care/schedule-view-va-appointments/appointments/');
+    cy.visit('health-care/schedule-view-va-appointments/appointments');
     cy.injectAxe();
 
     // Start flow
-    cy.findByText('Start scheduling').click();
+    cy.findByText('Start scheduling', { waitForAnimations: true }).click({
+      waitForAnimations: true,
+    });
 
     // Select COVID-19 vaccine appointment type
     cy.get('input[value="covid"]')
@@ -28,6 +31,7 @@ describe('VAOS COVID-19 vaccine appointment flow', () => {
     cy.url().should('include', '/new-covid-19-vaccine-appointment');
     cy.axeCheckBestPractice();
     cy.contains('button', 'Continue')
+      .should('not.be.disabled')
       .focus()
       .click();
 
@@ -46,7 +50,7 @@ describe('VAOS COVID-19 vaccine appointment flow', () => {
     cy.findByText(/Continue/).click();
 
     // Choose Clinic
-    cy.url().should('include', '/choose-clinic');
+    cy.url().should('include', '/choose-clinic', { timeout: Timeouts.slow });
     cy.axeCheckBestPractice();
     cy.findByText(/Choose where you’d like to get your vaccine/);
     cy.get('#root_clinicId_0')
@@ -58,6 +62,7 @@ describe('VAOS COVID-19 vaccine appointment flow', () => {
     cy.url().should('include', '/select-date');
     cy.findByText(/Finding appointment availability.../i).should('not.exist');
     cy.contains('button', 'Next')
+      .should('not.be.disabled')
       .focus()
       .click();
     cy.get(
@@ -114,10 +119,12 @@ describe('VAOS COVID-19 vaccine appointment flow', () => {
   it('should show facility contact page on second dose selection', () => {
     initAppointmentListMock();
     initVaccineAppointmentMock();
-    cy.visit('health-care/schedule-view-va-appointments/appointments/');
+    cy.visit('health-care/schedule-view-va-appointments/appointments');
     cy.injectAxe();
     // Start flow
-    cy.findByText('Start scheduling').click();
+    cy.findByText('Start scheduling', { waitForAnimations: true }).click({
+      waitForAnimations: true,
+    });
 
     // Select COVID-19 vaccine appointment type
     cy.get('input[value="covid"]')
@@ -131,6 +138,7 @@ describe('VAOS COVID-19 vaccine appointment flow', () => {
     cy.url().should('include', '/new-covid-19-vaccine-appointment');
     cy.axeCheckBestPractice();
     cy.contains('button', 'Continue')
+      .should('not.be.disabled')
       .focus()
       .click();
 
@@ -152,10 +160,20 @@ describe('VAOS COVID-19 vaccine appointment flow', () => {
     initAppointmentListMock();
     initVaccineAppointmentMock({ unableToScheduleCovid: true });
 
-    cy.visit(
-      'health-care/schedule-view-va-appointments/appointments/new-covid-19-vaccine-appointment',
-    );
+    cy.visit('health-care/schedule-view-va-appointments/appointments');
     cy.injectAxe();
+    // Start flow
+    cy.findByText('Start scheduling', { waitForAnimations: true }).click({
+      waitForAnimations: true,
+    });
+
+    // Select COVID-19 vaccine appointment type
+    cy.get('input[value="covid"]')
+      .focus()
+      .check();
+
+    // Start vaccine flow
+    cy.findByText(/Continue/).click();
 
     // Contact Facility Page
     cy.url().should('include', '/contact-facility');

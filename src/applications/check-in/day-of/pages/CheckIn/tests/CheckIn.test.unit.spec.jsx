@@ -12,6 +12,14 @@ import CheckIn from '../index';
 describe('check-in', () => {
   describe('CheckIn component', () => {
     let store;
+    const mockRouter = {
+      params: {
+        token: 'token-123',
+      },
+      location: {
+        pathname: '/third-page',
+      },
+    };
     beforeEach(() => {
       const middleware = [];
       const mockStore = configureStore(middleware);
@@ -19,6 +27,14 @@ describe('check-in', () => {
         checkInData: {
           context: {
             token: 'some-token',
+          },
+          form: {
+            pages: ['first-page', 'second-page', 'third-page', 'fourth-page'],
+            data: {
+              demographicsUpToDate: 'yes',
+              emergencyContactUpToDate: 'yes',
+              nextOfKinUpToDate: 'yes',
+            },
           },
           appointments: [
             {
@@ -28,16 +44,12 @@ describe('check-in', () => {
               clinicName: 'Green Team Clinic1',
             },
           ],
+          veteranData: {},
         },
       };
       store = mockStore(initState);
     });
     it('passes axeCheck', () => {
-      const mockRouter = {
-        params: {
-          token: 'token-123',
-        },
-      };
       axeCheck(
         <Provider store={store}>
           <CheckIn
@@ -54,31 +66,8 @@ describe('check-in', () => {
         </Provider>,
       );
     });
-    it('shows the loading indicator', () => {
-      const mockRouter = {
-        params: {
-          token: 'token-123',
-        },
-      };
 
-      const { container } = render(
-        <Provider store={store}>
-          <CheckIn isLoading router={mockRouter} />
-        </Provider>,
-      );
-
-      expect(container.querySelector('va-loading-indicator')).to.have.attribute(
-        'message',
-        'Loading your appointments for today',
-      );
-    });
-    it('refreshes appointments', () => {
-      const mockRouter = {
-        params: {
-          token: 'token-123',
-        },
-      };
-
+    it('refresh appointments button exists', () => {
       const screen = render(
         <Provider store={store}>
           <CheckIn
@@ -96,7 +85,6 @@ describe('check-in', () => {
       );
 
       expect(screen.queryByTestId('refresh-appointments-button')).to.exist;
-      screen.queryByTestId('refresh-appointments-button').click();
     });
   });
 });

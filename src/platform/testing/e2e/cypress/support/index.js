@@ -1,8 +1,8 @@
-import { join } from 'path';
 import '@testing-library/cypress/add-commands';
 import 'cypress-axe';
 import 'cypress-plugin-tab';
 import 'cypress-real-events/support';
+import '@cypress/code-coverage/support';
 import addContext from 'mochawesome/addContext';
 import './commands';
 
@@ -19,14 +19,6 @@ Cypress.on('window:before:load', window => {
   document.head.appendChild(style);
 });
 
-// Allows paths passed to `cy.fixture` to start from project root because
-// the `fixtureFolder` needs to be set to "src" in the configuration.
-// Setting it to "." causes Cypress to fail to find the spec files,
-// presumably because it can't contain the `integrationFolder` ("src").
-Cypress.Commands.overwrite('fixture', (originalFn, path, options) =>
-  originalFn(join('..', path), options),
-);
-
 // Hack to allow the type command to accept and simulate an input with 0 delay.
 // The default command ignores delays under 10 (seconds).
 // https://github.com/cypress-io/cypress/issues/566#issuecomment-577763747
@@ -37,8 +29,19 @@ Cypress.Commands.overwrite('type', (originalFn, element, text, options) => {
     // Use 0 because it's expected to pass most validations.
     return originalFn(element, '0{backspace}', options);
   }
+  let newOptions;
+  if (options?.delay) {
+    newOptions = options;
+  } else {
+    // This removes the default 10 ms delay in cy.type().
+    newOptions = { ...options, delay: 0 };
+  }
+  return originalFn(element, text, newOptions);
+});
 
-  return originalFn(element, text, options);
+// This removes the default 10 ms delay in cy.clear().
+Cypress.Commands.overwrite('clear', (originalFn, element) => {
+  return originalFn(element, { delay: 0 });
 });
 
 Cypress.on('uncaught:exception', () => {

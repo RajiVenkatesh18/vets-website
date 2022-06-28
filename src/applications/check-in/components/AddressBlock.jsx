@@ -1,7 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
 
 const AddressBlock = ({ address }) => {
+  const { t } = useTranslation();
   const requiredFields = ['street1', 'city', 'state', 'zip'];
   const isValidAddress = requiredFields.every(
     item =>
@@ -9,7 +11,7 @@ const AddressBlock = ({ address }) => {
   );
 
   if (!isValidAddress) {
-    return 'Not available';
+    return t('not-available');
   }
 
   const formatAddressLine = line =>
@@ -29,9 +31,9 @@ const AddressBlock = ({ address }) => {
       {lineTwo}
       {lineThree}
       <br />
-      <span data-testid="address-city-state-and-zip">{`${address.city}, ${
-        address.state
-      } ${address.zip.substring(0, 5)}`}</span>
+      <span data-testid="address-city-state-and-zip">
+        {`${address.city}, ${address.state} ${address.zip.substring(0, 5)}`}
+      </span>
     </>
   );
 };

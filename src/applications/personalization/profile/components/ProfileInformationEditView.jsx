@@ -2,10 +2,10 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 
-import recordEvent from '~/platform/monitoring/record-event';
-import LoadingButton from '~/platform/site-wide/loading-button/LoadingButton';
-import { focusElement } from '~/platform/utilities/ui';
-import SchemaForm from '~/platform/forms-system/src/js/components/SchemaForm';
+import SchemaForm from 'platform/forms-system/src/js/components/SchemaForm';
+import { isEmptyAddress } from 'platform/forms/address/helpers';
+
+import { createPersonalInfoUpdate } from '@@profile/actions/personalInformation';
 
 import {
   createTransaction,
@@ -17,7 +17,12 @@ import {
 } from '@@vap-svc/actions';
 
 import * as VAP_SERVICE from '@@vap-svc/constants';
-import { ACTIVE_EDIT_VIEWS, FIELD_NAMES, USA } from '@@vap-svc/constants';
+import {
+  ACTIVE_EDIT_VIEWS,
+  FIELD_NAMES,
+  USA,
+  PERSONAL_INFO_FIELD_NAMES,
+} from '@@vap-svc/constants';
 
 import {
   isFailedTransaction,
@@ -26,7 +31,6 @@ import {
 } from '@@vap-svc/util/transactions';
 import VAPServiceEditModalErrorMessage from '@@vap-svc/components/base/VAPServiceEditModalErrorMessage';
 import CopyMailingAddress from '@@vap-svc/containers/CopyMailingAddress';
-import { getEditButtonId } from '@@vap-svc/components/ProfileInformationFieldController';
 
 import {
   selectCurrentlyOpenEditModal,
@@ -37,48 +41,47 @@ import {
 } from '@@vap-svc/selectors';
 
 import { transformInitialFormValues } from '@@profile/util/contact-information/formValues';
+import { getEditButtonId } from '@@vap-svc/util/id-factory';
+
+import { focusElement } from '~/platform/utilities/ui';
+import LoadingButton from '~/platform/site-wide/loading-button/LoadingButton';
+import recordEvent from '~/platform/monitoring/record-event';
 
 import ProfileInformationActionButtons from './ProfileInformationActionButtons';
 
+const propTypes = {
+  analyticsSectionName: PropTypes.oneOf(
+    Object.values(VAP_SERVICE.ANALYTICS_FIELD_MAP),
+  ).isRequired,
+  apiRoute: PropTypes.oneOf(Object.values(VAP_SERVICE.API_ROUTES)).isRequired,
+  clearTransactionRequest: PropTypes.func.isRequired,
+  convertCleanDataToPayload: PropTypes.func.isRequired,
+  createPersonalInfoUpdate: PropTypes.func.isRequired,
+  createTransaction: PropTypes.func.isRequired,
+  fieldName: PropTypes.oneOf(Object.values(VAP_SERVICE.FIELD_NAMES)).isRequired,
+  formSchema: PropTypes.object.isRequired,
+  getInitialFormValues: PropTypes.func.isRequired,
+  openModal: PropTypes.func.isRequired,
+  refreshTransaction: PropTypes.func.isRequired,
+  uiSchema: PropTypes.object.isRequired,
+  updateFormFieldWithSchema: PropTypes.func.isRequired,
+  validateAddress: PropTypes.func.isRequired,
+  onCancel: PropTypes.func.isRequired,
+  activeEditView: PropTypes.string,
+  data: PropTypes.object,
+  editViewData: PropTypes.object,
+  field: PropTypes.shape({
+    value: PropTypes.object,
+    validations: PropTypes.object,
+    formSchema: PropTypes.object,
+    uiSchema: PropTypes.object,
+  }),
+  title: PropTypes.string,
+  transaction: PropTypes.object,
+  transactionRequest: PropTypes.object,
+};
+
 export class ProfileInformationEditView extends Component {
-  static propTypes = {
-    activeEditView: PropTypes.string,
-    analyticsSectionName: PropTypes.oneOf(
-      Object.values(VAP_SERVICE.ANALYTICS_FIELD_MAP),
-    ).isRequired,
-    apiRoute: PropTypes.oneOf(Object.values(VAP_SERVICE.API_ROUTES)).isRequired,
-    clearTransactionRequest: PropTypes.func.isRequired,
-    convertCleanDataToPayload: PropTypes.func.isRequired,
-    createTransaction: PropTypes.func.isRequired,
-    data: PropTypes.object,
-    editViewData: PropTypes.object,
-    field: PropTypes.shape({
-      value: PropTypes.object,
-      validations: PropTypes.object,
-    }),
-    fieldName: PropTypes.oneOf(Object.values(VAP_SERVICE.FIELD_NAMES))
-      .isRequired,
-    formSchema: PropTypes.object.isRequired,
-    getInitialFormValues: PropTypes.func.isRequired,
-    onCancel: PropTypes.func.isRequired,
-    refreshTransaction: PropTypes.func.isRequired,
-    title: PropTypes.string,
-    transaction: PropTypes.object,
-    transactionRequest: PropTypes.object,
-    uiSchema: PropTypes.object.isRequired,
-    updateFormFieldWithSchema: PropTypes.func.isRequired,
-    validateAddress: PropTypes.func.isRequired,
-  };
-
-  focusOnFirstFormElement() {
-    const focusableElement = this.editForm?.querySelector(
-      'button, input, select, a, textarea',
-    );
-    if (focusableElement) {
-      focusableElement.focus();
-    }
-  }
-
   componentDidMount() {
     const { getInitialFormValues } = this.props;
     this.onChangeFormDataAndSchemas(
@@ -146,13 +149,14 @@ export class ProfileInformationEditView extends Component {
     }
   }
 
-  captureEvent(actionName) {
-    recordEvent({
-      event: 'profile-navigation',
-      'profile-action': actionName,
-      'profile-section': this.props.analyticsSectionName,
-    });
-  }
+  copyMailingAddress = mailingAddress => {
+    const newAddressValue = { ...this.props.field.value, ...mailingAddress };
+    this.onChangeFormDataAndSchemas(
+      transformInitialFormValues(newAddressValue),
+      this.props.field.formSchema,
+      this.props.field.uiSchema,
+    );
+  };
 
   refreshTransaction = () => {
     this.props.refreshTransaction(
@@ -180,7 +184,34 @@ export class ProfileInformationEditView extends Component {
       payload = convertCleanDataToPayload(payload, fieldName);
     }
 
-    const method = payload.id ? 'PUT' : 'POST';
+    // for personal info fields we are using a different request flow
+    if (Object.values(PERSONAL_INFO_FIELD_NAMES).includes(fieldName)) {
+      // personal info updates require a value
+      // this is a fix for blur validation bug
+      if (
+        fieldName === PERSONAL_INFO_FIELD_NAMES.PREFERRED_NAME &&
+        !field.value?.[PERSONAL_INFO_FIELD_NAMES.PREFERRED_NAME]
+      ) {
+        field.formSchema.required = [fieldName];
+        this.onChangeFormDataAndSchemas(
+          field.value,
+          field.formSchema,
+          field.uiSchema,
+        );
+        return;
+      }
+      this.props.createPersonalInfoUpdate({
+        route: apiRoute,
+        method: 'PUT',
+        fieldName,
+        payload,
+        analyticsSectionName,
+        value: field.value,
+      });
+      return;
+    }
+
+    const method = payload?.id ? 'PUT' : 'POST';
 
     if (isAddressField) {
       this.props.validateAddress(
@@ -218,6 +249,7 @@ export class ProfileInformationEditView extends Component {
     if (newFieldValue['view:livesOnMilitaryBase']) {
       newFieldValue.countryCodeIso3 = USA.COUNTRY_ISO3_CODE;
     }
+
     this.onChangeFormDataAndSchemas(newFieldValue, schema, uiSchema);
   };
 
@@ -230,14 +262,22 @@ export class ProfileInformationEditView extends Component {
     );
   };
 
-  copyMailingAddress = mailingAddress => {
-    const newAddressValue = { ...this.props.field.value, ...mailingAddress };
-    this.onChangeFormDataAndSchemas(
-      transformInitialFormValues(newAddressValue),
-      this.props.field.formSchema,
-      this.props.field.uiSchema,
+  captureEvent(actionName) {
+    recordEvent({
+      event: 'profile-navigation',
+      'profile-action': actionName,
+      'profile-section': this.props.analyticsSectionName,
+    });
+  }
+
+  focusOnFirstFormElement() {
+    const focusableElement = this.editForm?.querySelector(
+      'button, input, select, a, textarea',
     );
-  };
+    if (focusableElement) {
+      focusableElement.focus();
+    }
+  }
 
   render() {
     const {
@@ -259,6 +299,8 @@ export class ProfileInformationEditView extends Component {
       transactionRequest?.error ||
       (isFailedTransaction(transaction) ? {} : null);
 
+    const isResidentialAddress = fieldName === FIELD_NAMES.RESIDENTIAL_ADDRESS;
+
     return (
       <>
         {!!field && (
@@ -267,7 +309,7 @@ export class ProfileInformationEditView extends Component {
               this.editForm = el;
             }}
           >
-            {fieldName === FIELD_NAMES.RESIDENTIAL_ADDRESS && (
+            {isResidentialAddress && (
               <CopyMailingAddress
                 copyMailingAddress={this.copyMailingAddress}
               />
@@ -315,6 +357,7 @@ export class ProfileInformationEditView extends Component {
 
                   {!isLoading && (
                     <button
+                      data-testid="cancel-edit-button"
                       type="button"
                       className="usa-button-secondary small-screen:vads-u-margin-top--0"
                       onClick={onCancel}
@@ -332,6 +375,8 @@ export class ProfileInformationEditView extends Component {
   }
 }
 
+ProfileInformationEditView.propTypes = propTypes;
+
 export const mapStateToProps = (state, ownProps) => {
   const { fieldName } = ownProps;
   const { transaction, transactionRequest } = selectVAPServiceTransaction(
@@ -341,6 +386,11 @@ export const mapStateToProps = (state, ownProps) => {
   const data = selectVAPContactInfoField(state, fieldName);
   // const addressValidationType = selectAddressValidationType(state);
   const activeEditView = selectCurrentlyOpenEditModal(state);
+
+  const mailingAddress = selectVAPContactInfoField(
+    state,
+    FIELD_NAMES.MAILING_ADDRESS,
+  );
 
   return {
     /*
@@ -361,6 +411,7 @@ export const mapStateToProps = (state, ownProps) => {
     transaction,
     transactionRequest,
     editViewData: selectEditViewData(state),
+    emptyMailingAddress: isEmptyAddress(mailingAddress),
   };
 };
 
@@ -371,6 +422,7 @@ const mapDispatchToProps = {
   updateFormFieldWithSchema,
   validateAddress,
   refreshTransaction,
+  createPersonalInfoUpdate,
 };
 
 export default connect(

@@ -3,11 +3,15 @@ import { expect } from 'chai';
 import format from 'date-fns/format';
 
 import { Provider } from 'react-redux';
+import { I18nextProvider } from 'react-i18next';
+
 import configureStore from 'redux-mock-store';
 
 import { axeCheck } from 'platform/forms-system/test/config/helpers';
 
 import { render } from '@testing-library/react';
+
+import i18n from '../../../../utils/i18n/i18n';
 
 import DisplayMultipleAppointments from '../DisplayMultipleAppointments';
 
@@ -18,17 +22,26 @@ describe('check-in', () => {
       const middleware = [];
       const mockStore = configureStore(middleware);
       const initState = {
-        checkInData: {},
+        checkInData: {
+          context: {
+            token: '',
+          },
+          form: {
+            pages: ['first-page', 'second-page', 'third-page', 'fourth-page'],
+          },
+        },
       };
       store = mockStore(initState);
     });
+    const mockRouter = {
+      params: {
+        token: 'token-123',
+      },
+      location: {
+        pathname: '/third-page',
+      },
+    };
     it('show appointment details progress', () => {
-      const mockRouter = {
-        params: {
-          token: 'token-123',
-        },
-      };
-
       const token = 'token-123';
       const appointments = [
         {
@@ -41,11 +54,13 @@ describe('check-in', () => {
 
       const checkIn = render(
         <Provider store={store}>
-          <DisplayMultipleAppointments
-            router={mockRouter}
-            token={token}
-            appointments={appointments}
-          />
+          <I18nextProvider i18n={i18n}>
+            <DisplayMultipleAppointments
+              router={mockRouter}
+              token={token}
+              appointments={appointments}
+            />
+          </I18nextProvider>
         </Provider>,
       );
 
@@ -69,11 +84,6 @@ describe('check-in', () => {
       );
     });
     it('passes axeCheck', () => {
-      const mockRouter = {
-        params: {
-          token: 'token-123',
-        },
-      };
       const appointments = [
         {
           clinicPhone: '555-867-5309',
@@ -94,12 +104,6 @@ describe('check-in', () => {
     });
     describe('back button visibility based on update page', () => {
       it('shows the back button if update page is enabled', () => {
-        const mockRouter = {
-          params: {
-            token: 'token-123',
-          },
-        };
-
         const token = 'token-123';
         const appointments = [
           {
@@ -112,22 +116,18 @@ describe('check-in', () => {
 
         const checkIn = render(
           <Provider store={store}>
-            <DisplayMultipleAppointments
-              router={mockRouter}
-              token={token}
-              appointments={appointments}
-            />
+            <I18nextProvider i18n={i18n}>
+              <DisplayMultipleAppointments
+                router={mockRouter}
+                token={token}
+                appointments={appointments}
+              />
+            </I18nextProvider>
           </Provider>,
         );
         expect(checkIn.getByTestId('back-button')).to.exist;
       });
       it('shows the back button if demographics page is enabled', () => {
-        const mockRouter = {
-          params: {
-            token: 'token-123',
-          },
-        };
-
         const token = 'token-123';
         const appointments = [
           {
@@ -140,23 +140,19 @@ describe('check-in', () => {
 
         const checkIn = render(
           <Provider store={store}>
-            <DisplayMultipleAppointments
-              router={mockRouter}
-              token={token}
-              appointments={appointments}
-            />
+            <I18nextProvider i18n={i18n}>
+              <DisplayMultipleAppointments
+                router={mockRouter}
+                token={token}
+                appointments={appointments}
+              />
+            </I18nextProvider>
           </Provider>,
         );
         expect(checkIn.getByTestId('back-button')).to.exist;
       });
 
       it('shows the date & time the appointments were loaded & a refresh link', () => {
-        const mockRouter = {
-          params: {
-            token: 'token-123',
-          },
-        };
-
         const token = 'token-123';
         const appointments = [
           {
@@ -169,12 +165,13 @@ describe('check-in', () => {
 
         const checkIn = render(
           <Provider store={store}>
-            <DisplayMultipleAppointments
-              router={mockRouter}
-              token={token}
-              appointments={appointments}
-              isUpdatePageEnabled
-            />
+            <I18nextProvider i18n={i18n}>
+              <DisplayMultipleAppointments
+                router={mockRouter}
+                token={token}
+                appointments={appointments}
+              />
+            </I18nextProvider>
           </Provider>,
         );
         expect(checkIn.getByTestId('update-text')).to.have.text(

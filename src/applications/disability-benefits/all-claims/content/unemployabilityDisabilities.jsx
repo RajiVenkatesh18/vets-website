@@ -1,8 +1,6 @@
 import React from 'react';
-import AdditionalInfo from '@department-of-veterans-affairs/component-library/AdditionalInfo';
-import Telephone, {
-  CONTACTS,
-} from '@department-of-veterans-affairs/component-library/Telephone';
+import { VaAdditionalInfo } from '@department-of-veterans-affairs/component-library/dist/react-bindings';
+import { CONTACTS } from '@department-of-veterans-affairs/component-library/contacts';
 
 import { recordEventOnce } from 'platform/monitoring/record-event';
 
@@ -31,8 +29,9 @@ export const disabilitiesDescription = ({ formContext }) => {
         disabilities that prevent you from getting and keeping a steady job
         (substantially gainful employment).
       </p>
-      <AdditionalInfo
-        triggerText="What’s substantially gainful employment?"
+      <VaAdditionalInfo
+        trigger="What’s substantially gainful employment?"
+        disableAnalytics
         onClick={helpClicked}
       >
         <p>Substantially gainful employment means:</p>
@@ -47,7 +46,7 @@ export const disabilitiesDescription = ({ formContext }) => {
             person.
           </li>
         </ul>
-      </AdditionalInfo>
+      </VaAdditionalInfo>
     </div>
   );
 };
@@ -56,7 +55,7 @@ export const helpDescription = (
   <p>
     <strong>Please note:</strong> If you expect to see something that isn’t
     included in this list or if you have other questions about your claim,
-    contact: <Telephone contact={CONTACTS['222_VETS']} />, Monday through
+    contact: <va-telephone contact={CONTACTS['222_VETS']} />, Monday through
     Friday, 8:00 a.m. to 8:00 p.m. ET.
   </p>
 );

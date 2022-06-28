@@ -10,8 +10,7 @@
         "city": "New York",
         "countryName": "United States",
         "stateCode": "NY",
-        "zipCode": "30012",
-        "internationalPostalCode": "1"
+        "zipCode": "30012"
       },
       "phone": {
         "countryCode": "6",
@@ -24,7 +23,7 @@
     "homeless": false,
     "boardReviewOption": "hearing",
     "hearingTypePreference": "central_office",
-    "socOptIn": true,
+    "socOptIn": false,
     "view:additionalEvidence": false,
 
     "contestableIssues": [
@@ -81,7 +80,6 @@
         "view:selected": true
       }
     ],
-    "view:hasIssuesToAdd": false,
     "additionalIssues": [
       {
         "issue": "right arm",
@@ -91,7 +89,7 @@
       {
         "issue": "right shoulder",
         "decisionDate": "2021-06-06",
-        "view:selected": true
+        "view:selected": false
       }
     ],
     "areaOfDisagreement": [

@@ -2,14 +2,13 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation } from 'react-router-dom';
 import { sortStatementsByDate } from '../utils/helpers';
-
 import DownloadStatements from './DownloadStatement';
 
 const PDFStatementList = () => {
   const { pathname } = useLocation();
   const selectedId = pathname.replace('/balance-details/', '');
   const userFullName = useSelector(({ user }) => user.profile.userFullName);
-  const statements = useSelector(({ mcp }) => mcp.statements);
+  const statements = useSelector(({ mcp }) => mcp.statements) ?? [];
 
   // get selected statement
   const [selectedCopay] = statements?.filter(({ id }) => id === selectedId);
@@ -28,10 +27,10 @@ const PDFStatementList = () => {
 
   return (
     <section data-testid="download-statements">
-      <h2 id="download-statements">Download your statements</h2>
+      <h2 id="statement-list">Your statements</h2>
       <p>
-        Download your mailed statements for this facility from the past 6
-        months.
+        Download your mailed statements from the past 6 months for this
+        facility.
       </p>
 
       {sortedFacilityCopays.map(statement => (

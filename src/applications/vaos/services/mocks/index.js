@@ -1,6 +1,7 @@
 /* istanbul ignore file */
 /* eslint-disable camelcase */
 const delay = require('mocker-api/lib/delay');
+const moment = require('moment');
 
 // var
 const confirmedVA = require('./var/confirmed_va.json');
@@ -22,7 +23,7 @@ const varSlots = require('./var/slots.json');
 const cancelReasons = require('./var/cancel_reasons.json');
 const requestEligibilityCriteria = require('./var/request_eligibility_criteria.json');
 const directBookingEligibilityCriteria = require('./var/direct_booking_eligibility_criteria.json');
-const generateMockSlots = require('./var/slots.js');
+const generateMockSlots = require('./var/slots');
 
 // v2
 const requestsV2 = require('./v2/requests.json');
@@ -41,9 +42,8 @@ const responses = {
   'GET /vaos/v0/appointments': (req, res) => {
     if (req.query.type === 'cc') {
       return res.json(confirmedCC);
-    } else {
-      return res.json(confirmedVA);
     }
+    return res.json(confirmedVA);
   },
   'GET /vaos/v0/appointments/va/:id': (req, res) => {
     return res.json({
@@ -57,7 +57,7 @@ const responses = {
     });
   },
   'GET /vaos/v0/appointment_requests/:id/messages': (req, res) => {
-    const id = req.params.id;
+    const { id } = req.params;
     if (id === '8a48912a6c2409b9016c525a4d490190') {
       return res.json(messages0190);
     }
@@ -72,11 +72,11 @@ const responses = {
   'GET /vaos/v0/systems/:id/direct_scheduling_facilities': (req, res) => {
     if (req.query.parent_code === '984') {
       return res.json(facilities984);
-    } else if (req.query.parent_code === '983A6') {
-      return res.json(facilities983A6);
-    } else {
-      return res.json(facilities983);
     }
+    if (req.query.parent_code === '983A6') {
+      return res.json(facilities983A6);
+    }
+    return res.json(facilities983);
   },
   'GET /vaos/v0/community_care/eligibility/:id': (req, res) => {
     return res.json({
@@ -130,7 +130,8 @@ const responses = {
   'GET /vaos/v0/facilities/:id/clinics': (req, res) => {
     if (req.params.id === '983') {
       return res.json(clinicList983);
-    } else if (req.params.id.startsWith(612)) {
+    }
+    if (req.params.id.startsWith(612)) {
       return res.json(clinicList612);
     }
 
@@ -229,8 +230,29 @@ const responses = {
   },
   'GET /vaos/v2/appointments': (req, res) => {
     if (req.query.statuses?.includes('proposed')) {
+      if (req.query.start && req.query.end) {
+        return res.json({
+          data: confirmedV2.data.filter(appt => {
+            const d = moment(appt.attributes.start);
+            return d.isValid()
+              ? d.isBetween(req.query.start, req.query.end, 'day', '(]')
+              : false;
+          }),
+        });
+      }
       return res.json(requestsV2);
-    } else if (req.query.statuses?.includes('booked')) {
+    }
+    if (req.query.statuses?.includes('booked')) {
+      if (req.query.start && req.query.end) {
+        return res.json({
+          data: confirmedV2.data.filter(appt => {
+            const d = moment(appt.attributes.start);
+            return d.isValid()
+              ? d.isBetween(req.query.start, req.query.end, 'day', '(]')
+              : false;
+          }),
+        });
+      }
       return res.json(confirmedV2);
     }
 
@@ -257,8 +279,8 @@ const responses = {
     });
   },
   'GET /vaos/v2/facilities': (req, res) => {
-    const ids = req.query.ids;
-    const children = req.query.children;
+    const { ids } = req.query;
+    const { children } = req.query;
 
     return res.json({
       data: facilitiesV2.data.filter(
@@ -289,8 +311,8 @@ const responses = {
 
     if (
       isDirect &&
-      (req.query.facility_id.startsWith('984') &&
-        req.query.clinical_service_id !== 'primaryCare')
+      req.query.facility_id.startsWith('984') &&
+      req.query.clinical_service_id !== 'primaryCare'
     ) {
       ineligibilityReasons.push({
         coding: [
@@ -422,11 +444,9 @@ const responses = {
         { name: 'vaOnlineSchedulingFacilitiesServiceV2', value: true },
         { name: 'vaOnlineSchedulingVAOSServiceCCAppointments', value: true },
         { name: 'vaOnlineSchedulingVariantTesting', value: false },
-        { name: 'vaOnlineSchedulingCCIterations', value: true },
         { name: 'vaOnlineSchedulingPocHealthApt', value: true },
-        { name: 'ssoe', value: true },
-        { name: 'ssoe_inbound', value: false },
-        { name: 'ssoe_ebenefits_links', value: false },
+        { name: 'vaOnlineSchedulingStatusImprovement', value: true },
+        { name: 'vaOnlineFilter36Vats', value: true },
         { name: 'edu_section_103', value: true },
         { name: 'vaViewDependentsAccess', value: false },
         { name: 'gibctEybBottomSheet', value: true },

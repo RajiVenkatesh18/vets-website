@@ -1,9 +1,13 @@
 import React from 'react';
 import moment from 'moment';
 import { connect } from 'react-redux';
-import scrollToTop from 'platform/utilities/ui/scrollToTop';
+import PropTypes from 'prop-types';
 
+import scrollToTop from 'platform/utilities/ui/scrollToTop';
 import { focusElement } from 'platform/utilities/ui';
+import ServiceProvidersText, {
+  ServiceProvidersTextCreateAcct,
+} from 'platform/user/authentication/components/ServiceProvidersText';
 
 import manifest from '../manifest.json';
 
@@ -22,46 +26,62 @@ export class ConfirmationPage extends React.Component {
     const { response } = submission;
     const veteranFirstName = data?.veteranInformation?.fullName?.first || '';
     const veteranLastName = data?.veteranInformation?.fullName?.last || '';
+    const dateSubmitted = moment(response?.timestamp);
 
     return (
       <>
-        <div>
-          <button onClick={this.handlePrintClick} className="usa-button">
+        <div className="print-only">
+          <img
+            src="https://www.va.gov/img/design/logo/logo-black-and-white.png"
+            alt="VA logo"
+            width="300"
+          />
+          <h2 className="vads-u-margin-top--2">
+            Add or remove a dependent on your VA disability benefits
+          </h2>
+          <div className="vads-u-margin-bottom--2">
+            VA Form 21-686c (with 21P-527EZ and 21-674)
+          </div>
+        </div>
+        <div className="inset">
+          <h2
+            id="thank-you-message"
+            className="vads-u-font-size--h3 vads-u-font-family--serif vads-u-margin-top--1"
+          >
+            Thank you for submitting your application
+          </h2>
+          <dl>
+            <dt>
+              <strong>
+                Application for Declaration of Status of Dependents (Form
+                21-686c), and/or
+                <br />
+                Request for Approval of School Attendance (Form 21-674), and/or
+                <br />
+                Application for Veterans Pension (Form 21P-527EZ)
+              </strong>
+            </dt>
+            <dd>
+              {veteranFirstName || veteranLastName
+                ? `for ${veteranFirstName} ${veteranLastName}`
+                : ''}
+            </dd>
+            <dt>
+              <strong>Date submitted</strong>
+            </dt>
+            <dd>
+              {dateSubmitted.isValid()
+                ? dateSubmitted.format('MMMM D, YYYY')
+                : ''}
+            </dd>
+          </dl>
+          <button
+            type="button"
+            className="usa-button screen-only"
+            onClick={this.handlePrintClick}
+          >
             Print this page for your records
           </button>
-          <div className="inset">
-            <h2
-              id="thank-you-message"
-              className="vads-u-font-size--h3 vads-u-font-family--serif"
-            >
-              Thank you for submitting your application
-            </h2>
-            <p className="vads-u-font-size--base vads-u-font-family--serif vads-u-font-weight--bold vads-u-margin--0">
-              Application for Declaration of Status of Dependents (Form 21-686c)
-            </p>
-            <p className="vads-u-font-size--base vads-u-font-family--serif vads-u-font-weight--bold vads-u-margin--0">
-              and/or Request for Approval of School Attendance (Form 21-674)
-            </p>
-            <p className="vads-u-font-size--base vads-u-font-family--serif vads-u-font-weight--bold vads-u-margin--0">
-              and/or Application for Veterans Pension (Form 21P-527EZ)
-            </p>
-            {response && (
-              <div>
-                <p>
-                  for {veteranFirstName} {veteranLastName}
-                </p>
-                <ul className="claim-list">
-                  <li>
-                    <strong>Date submitted</strong>
-                    <br />
-                    <span>
-                      {moment(response.timestamp).format('MMM D, YYYY')}
-                    </span>
-                  </li>
-                </ul>
-              </div>
-            )}
-          </div>
         </div>
         <div>
           <h2 className="vads-u-font-size--h3 vads-u-font-family--serif">
@@ -77,8 +97,8 @@ export class ConfirmationPage extends React.Component {
             If we haven’t contacted you within a week after you submitted your
             application, <strong>please don’t apply again</strong>. Instead,
             please call our toll-free hotline at{' '}
-            <a href="tel:877-222-8387">877-222-VETS</a> (877-222-8387). We’re
-            here Monday through Friday, 8:00 am to 8:00 pm ET
+            <va-telephone contact="8772228387" vanity="VETS" />. We’re here
+            Monday through Friday, 8:00 am to 8:00 pm ET
           </p>
 
           <h2 className="vads-u-font-size--h3 vads-u-font-family--serif">
@@ -88,9 +108,8 @@ export class ConfirmationPage extends React.Component {
             <li className="process-step list-one">
               <h3 className="vads-u-font-size--h4">Sign in to VA.gov</h3>
               <p>
-                You can sign in with your DS Logon, My HealtheVet, or ID.me
-                account. If you completed this form without signing in, and you
-                don’t have an account, you can create one now.
+                You can sign in with your existing <ServiceProvidersText />
+                account. <ServiceProvidersTextCreateAcct isFormBased />
               </p>
             </li>
             <li className="process-step list-two">
@@ -121,7 +140,7 @@ export class ConfirmationPage extends React.Component {
               </p>
             </li>
           </ol>
-          <h2 className="vads-u-font-size--h3 vads-u-font-family--serif">
+          <h2 className="vads-u-font-size--h3 vads-u-font-family--serif vads-u-margin-top--0">
             How will I know if my application to add or remove dependents is
             approved?
           </h2>
@@ -146,9 +165,9 @@ export class ConfirmationPage extends React.Component {
             What if I have more questions?
           </h2>
           <p className="vads-u-margin-bottom--6">
-            Please call <a href="tel:877-222-8387">877-222-VETS</a>{' '}
-            (877-222-8387) and select 2. We’re here Monday through Friday, 8:00
-            a.m. to 8:00 p.m. ET.
+            Please call <va-telephone contact="8772228387" vanity="VETS" /> and
+            select 2. We’re here Monday through Friday, 8:00 a.m. to 8:00 p.m.
+            ET.
           </p>
         </div>
       </>
@@ -161,5 +180,24 @@ function mapStateToProps(state) {
     form: state.form,
   };
 }
+
+ConfirmationPage.propTypes = {
+  form: PropTypes.shape({
+    data: PropTypes.shape({
+      veteranInformation: PropTypes.shape({
+        fullName: PropTypes.shape({
+          first: PropTypes.string,
+          last: PropTypes.string,
+        }),
+      }),
+    }),
+    formId: PropTypes.string,
+    submission: PropTypes.shape({
+      response: {
+        timestamp: PropTypes.string,
+      },
+    }),
+  }),
+};
 
 export default connect(mapStateToProps)(ConfirmationPage);

@@ -3,13 +3,12 @@
 @import "~@department-of-veterans-affairs/formation/sass/shared-variables";
 @import "~@department-of-veterans-affairs/formation/sass/modules/m-process-list";
 @import "~@department-of-veterans-affairs/formation/sass/modules/m-form-process";
-@import "~@department-of-veterans-affairs/formation/sass/modules/m-progress-bar";
 @import "../../../platform/forms/sass/m-schemaform";
 @import "~@department-of-veterans-affairs/formation/sass/modules/m-modal";
 @import "~@department-of-veterans-affairs/formation/sass/modules/m-omb-info";
 @import "../../../platform/forms/sass/m-form-confirmation";
 
-.confirmation-page {
+.hca-confirmation-page {
   padding-bottom: 5rem;
 }
 
@@ -52,4 +51,9 @@
 
 .bullet-disc {
   list-style-type: disc;
+}
+
+.hca-progress-button {
+  box-sizing: border-box;
+  width: 100%;
 }

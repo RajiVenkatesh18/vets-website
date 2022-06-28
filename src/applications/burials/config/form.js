@@ -9,23 +9,6 @@ import fullSchemaBurials from 'vets-json-schema/dist/21P-530-schema.json';
 
 import applicantDescription from 'platform/forms/components/ApplicantDescription';
 
-import IntroductionPage from '../components/IntroductionPage';
-import ConfirmationPage from '../containers/ConfirmationPage';
-import ErrorText from '../components/ErrorText';
-
-import {
-  burialDateWarning,
-  fileHelp,
-  transportationWarning,
-  serviceRecordNotification,
-  serviceRecordWarning,
-  submit,
-} from '../helpers';
-import {
-  relationshipLabels,
-  locationOfDeathLabels,
-  allowanceLabels,
-} from '../labels.jsx';
 import { validateBooleanGroup } from 'platform/forms-system/src/js/validation';
 import { isFullDate } from 'platform/forms/validations';
 import { externalServices } from 'platform/monitoring/DowntimeNotification';
@@ -42,9 +25,26 @@ import phoneUI from 'platform/forms-system/src/js/definitions/phone';
 import emailUI from 'platform/forms-system/src/js/definitions/email';
 import ssnUI from 'platform/forms-system/src/js/definitions/ssn';
 import currentOrPastDateUI from 'platform/forms-system/src/js/definitions/currentOrPastDate';
-import toursOfDutyUI from '../definitions/toursOfDuty';
 import fileUploadUI from 'platform/forms-system/src/js/definitions/file';
 import currencyUI from 'platform/forms-system/src/js/definitions/currency';
+import toursOfDutyUI from '../definitions/toursOfDuty';
+import IntroductionPage from '../components/IntroductionPage';
+import ConfirmationPage from '../containers/ConfirmationPage';
+import ErrorText from '../components/ErrorText';
+
+import {
+  BurialDateWarning,
+  fileHelp,
+  transportationWarning,
+  serviceRecordNotification,
+  serviceRecordWarning,
+  submit,
+} from '../helpers';
+import {
+  relationshipLabels,
+  locationOfDeathLabels,
+  allowanceLabels,
+} from '../labels';
 import {
   validateBurialAndDeathDates,
   validateCentralMailPostalCode,
@@ -243,7 +243,7 @@ const formConfig = {
               'Date of burial (includes cremation or interment)',
             ),
             'view:burialDateWarning': {
-              'ui:description': burialDateWarning,
+              'ui:description': BurialDateWarning,
               'ui:options': {
                 hideIf: formData => {
                   // If they haven’t entered a complete year, don’t jump the gun and show the warning
@@ -448,7 +448,7 @@ const formConfig = {
               },
             },
             'view:nonServiceWarning': {
-              'ui:description': burialDateWarning,
+              'ui:description': BurialDateWarning,
               'ui:options': {
                 hideIf: formData => {
                   if (

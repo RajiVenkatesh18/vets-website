@@ -1,37 +1,46 @@
-import React, { useCallback, useEffect } from 'react';
-import { connect } from 'react-redux';
+import React, { useCallback, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import PropTypes from 'prop-types';
 import recordEvent from 'platform/monitoring/record-event';
-import { goToNextPage, URLS } from '../utils/navigation';
-import BackToHome from '../components/BackToHome';
-import Footer from '../components/Footer';
-import { seeStaffMessageUpdated } from '../actions';
+import { useFormRouting } from '../../hooks/useFormRouting';
+import BackToHome from '../../components/BackToHome';
+import Footer from '../../components/layout/Footer';
+import { seeStaffMessageUpdated } from '../../actions/day-of';
+import { recordAnswer } from '../../actions/universal';
 import DemographicsDisplay from '../../components/pages/demographics/DemographicsDisplay';
+import { makeSelectVeteranData } from '../../selectors';
+
+import { URLS } from '../../utils/navigation';
 
 const Demographics = props => {
-  const {
-    demographics,
-    isLoading,
-    router,
-    updateSeeStaffMessage,
-    demographicsStatus,
-  } = props;
-  const { demographicsNeedsUpdate } = demographicsStatus;
-  const findNextPage = useCallback(
-    () => {
-      goToNextPage(router, URLS.NEXT_OF_KIN);
+  const { isDayOfDemographicsFlagsEnabled } = props;
+  const dispatch = useDispatch();
+  const selectVeteranData = useMemo(makeSelectVeteranData, []);
+  const { t } = useTranslation();
+  const { demographics } = useSelector(selectVeteranData);
+  const { router } = props;
+  const { goToNextPage, jumpToPage, goToErrorPage } = useFormRouting(router);
+
+  const updateSeeStaffMessage = useCallback(
+    seeStaffMessage => {
+      dispatch(seeStaffMessageUpdated(seeStaffMessage));
     },
-    [router],
+    [dispatch],
   );
+
   const yesClick = useCallback(
     () => {
       recordEvent({
         event: 'cta-button-click',
         'button-click-label': 'yes-to-demographic-information',
       });
-      findNextPage();
+      if (isDayOfDemographicsFlagsEnabled) {
+        dispatch(recordAnswer({ demographicsUpToDate: 'yes' }));
+      }
+      goToNextPage();
     },
-    [findNextPage],
+    [goToNextPage, isDayOfDemographicsFlagsEnabled, dispatch],
   );
 
   const noClick = useCallback(
@@ -40,67 +49,54 @@ const Demographics = props => {
         event: 'cta-button-click',
         'button-click-label': 'no-to-demographic-information',
       });
+      if (isDayOfDemographicsFlagsEnabled) {
+        dispatch(recordAnswer({ demographicsUpToDate: 'no' }));
+      }
       const seeStaffMessage = (
         <>
-          <p>Our staff can help you update your contact information.</p>
+          <p>{t('our-staff-can-help-you-update-your-contact-information')}</p>
           <p className="vads-u-margin-bottom--0">
-            If you don’t live at a fixed address right now, we’ll help you find
-            the best way to stay connected with us.
+            {t(
+              'if-you-dont-live-at-a-fixed-address-right-now-well-help-you-find-the-best-way-to-stay-connected-with-us',
+            )}
           </p>
         </>
       );
       updateSeeStaffMessage(seeStaffMessage);
-      goToNextPage(router, URLS.SEE_STAFF);
+      jumpToPage(URLS.SEE_STAFF);
     },
-    [router, updateSeeStaffMessage],
+    [
+      updateSeeStaffMessage,
+      jumpToPage,
+      isDayOfDemographicsFlagsEnabled,
+      dispatch,
+      t,
+    ],
   );
-  useEffect(
-    () => {
-      if (demographicsNeedsUpdate === false) {
-        findNextPage();
-      }
-    },
-    [demographicsNeedsUpdate, findNextPage],
-  );
-  if (isLoading) {
-    return (
-      <va-loading-indicator message="Loading your appointments for today" />
-    );
-  } else if (!demographics) {
-    goToNextPage(router, URLS.ERROR);
-    return <></>;
-  } else {
-    return (
-      <>
-        <DemographicsDisplay
-          demographics={demographics}
-          yesAction={yesClick}
-          noAction={noClick}
-          Footer={Footer}
-        />
-        <BackToHome />
-      </>
-    );
-  }
-};
 
-const mapDispatchToProps = dispatch => {
-  return {
-    updateSeeStaffMessage: seeStaffMessage => {
-      dispatch(seeStaffMessageUpdated(seeStaffMessage));
-    },
-  };
+  if (!demographics) {
+    goToErrorPage();
+    return <></>;
+  }
+  return (
+    <>
+      <DemographicsDisplay
+        demographics={demographics}
+        yesAction={yesClick}
+        noAction={noClick}
+        subtitle={t(
+          'we-can-better-follow-up-with-you-after-your-appointment-when-we-have-your-current-information',
+        )}
+        Footer={Footer}
+      />
+      <BackToHome />
+    </>
+  );
 };
 
 Demographics.propTypes = {
-  demographics: PropTypes.object,
-  isLoading: PropTypes.bool,
+  isDayOfDemographicsFlagsEnabled: PropTypes.bool,
   router: PropTypes.object,
-  updateSeeStaffMessage: PropTypes.func,
-  demographicsStatus: PropTypes.object,
 };
 
-export default connect(
-  null,
-  mapDispatchToProps,
-)(Demographics);
+export default Demographics;

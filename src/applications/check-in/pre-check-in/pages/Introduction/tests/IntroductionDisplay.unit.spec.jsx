@@ -2,6 +2,7 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import configureStore from 'redux-mock-store';
 import { axeCheck } from 'platform/forms-system/test/config/helpers';
+import { multipleAppointments } from '../../../../tests/unit/mocks/mock-appointments';
 import IntroductionDisplay from '../IntroductionDisplay';
 
 describe('pre-check-in', () => {
@@ -11,48 +12,8 @@ describe('pre-check-in', () => {
       const middleware = [];
       const mockStore = configureStore(middleware);
       const initState = {
-        preCheckInData: {
-          appointments: [
-            {
-              facility: 'LOMA LINDA VA CLINIC',
-              clinicPhoneNumber: '5551234567',
-              clinicFriendlyName: 'TEST CLINIC',
-              clinicName: 'LOM ACC CLINIC TEST',
-              appointmentIen: 'some-ien',
-              startTime: '2021-11-30T17:12:10.694Z',
-              eligibility: 'ELIGIBLE',
-              facilityId: 'some-facility',
-              checkInWindowStart: '2021-11-30T17:12:10.694Z',
-              checkInWindowEnd: '2021-11-30T17:12:10.694Z',
-              checkedInTime: '',
-            },
-            {
-              facility: 'LOMA LINDA VA CLINIC',
-              clinicPhoneNumber: '5551234567',
-              clinicFriendlyName: 'TEST CLINIC',
-              clinicName: 'LOM ACC CLINIC TEST',
-              appointmentIen: 'some-ien',
-              startTime: '2021-11-30T17:12:10.694Z',
-              eligibility: 'ELIGIBLE',
-              facilityId: 'some-facility',
-              checkInWindowStart: '2021-11-30T17:12:10.694Z',
-              checkInWindowEnd: '2021-11-30T17:12:10.694Z',
-              checkedInTime: '',
-            },
-            {
-              facility: 'LOMA LINDA VA CLINIC',
-              clinicPhoneNumber: '5551234567',
-              clinicFriendlyName: 'TEST CLINIC',
-              clinicName: 'LOM ACC CLINIC TEST',
-              appointmentIen: 'some-other-ien',
-              startTime: '2021-11-30T17:12:10.694Z',
-              eligibility: 'ELIGIBLE',
-              facilityId: 'some-facility',
-              checkInWindowStart: '2021-11-30T17:12:10.694Z',
-              checkInWindowEnd: '2021-11-30T17:12:10.694Z',
-              checkedInTime: '',
-            },
-          ],
+        checkInData: {
+          appointments: multipleAppointments,
           veteranData: {
             demographics: {
               nextOfKin1: {
@@ -95,7 +56,6 @@ describe('pre-check-in', () => {
           },
           form: {
             pages: ['first-page', 'second-page', 'third-page', 'fourth-page'],
-            currentPage: 'first-page',
           },
         },
       };

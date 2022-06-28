@@ -4,8 +4,6 @@ import { connect } from 'react-redux';
 import { cloneDeep } from 'lodash';
 
 import { setData } from 'platform/forms-system/src/js/actions';
-import SignatureCheckbox from './SignatureCheckbox';
-import SubmitLoadingIndicator from './SubmitLoadingIndicator';
 import {
   PrivacyPolicy,
   veteranSignatureContent,
@@ -19,6 +17,8 @@ import {
   secondaryOneLabel,
   secondaryTwoLabel,
 } from 'applications/caregivers/definitions/content';
+import SignatureCheckbox from './SignatureCheckbox';
+import SubmitLoadingIndicator from './SubmitLoadingIndicator';
 
 const PreSubmitCheckboxGroup = ({
   onSectionComplete,
@@ -32,8 +32,7 @@ const PreSubmitCheckboxGroup = ({
   const hasSecondaryTwo = formData['view:hasSecondaryCaregiverTwo'];
   const hasSubmittedForm = !!submission.status;
   const showRepresentativeSignatureBox =
-    formData.signAsRepresentativeYesNo === 'yes' ||
-    formData.signAsRepresentativeYesNo === 'noRep';
+    formData.signAsRepresentativeYesNo === 'yes';
   // we are separating the first paragraph due to each paragraph having unique styling
   const veteranFirstParagraph = veteranSignatureContent[0];
   const veteranWithoutFirstParagraph = veteranSignatureContent.slice(1);
@@ -97,6 +96,7 @@ const PreSubmitCheckboxGroup = ({
         ...transformSignatures(signatures),
       });
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [setFormData, signatures],
   );
 
@@ -271,10 +271,10 @@ const PreSubmitCheckboxGroup = ({
 };
 
 PreSubmitCheckboxGroup.propTypes = {
+  formData: PropTypes.object.isRequired,
+  setFormData: PropTypes.func.isRequired,
   showError: PropTypes.bool.isRequired,
   onSectionComplete: PropTypes.func.isRequired,
-  setFormData: PropTypes.func.isRequired,
-  formData: PropTypes.object.isRequired,
   submission: PropTypes.shape({
     hasAttemptedSubmit: PropTypes.bool,
     errorMessage: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]),

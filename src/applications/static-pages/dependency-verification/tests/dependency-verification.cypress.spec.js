@@ -1,10 +1,11 @@
-import manifest from 'applications/personalization/view-dependents/manifest.json';
-import mockDependents from 'applications/personalization/view-dependents/tests/e2e/fixtures/mock-dependents.json';
-import mockDiaries from './fixtures/diaries.json';
+import { getAppUrl } from 'platform/utilities/registry-helpers';
 
 import { RETRIEVE_DIARIES } from '../utils';
+import mockDependents from './fixtures/mock-dependents.json';
+import mockDiaries from './fixtures/diaries.json';
 
 const DEPENDENTS_ENDPOINT = 'v0/dependents_applications/show';
+const viewDependentsUrl = getAppUrl('dependents-view-dependents');
 
 describe('Dependency Verification', () => {
   beforeEach(() => {
@@ -34,7 +35,7 @@ describe('Dependency Verification', () => {
     cy.intercept('GET', '/v0/dependents_verifications', mockDiaries).as(
       'mockDiaries',
     );
-    cy.visit(manifest.rootUrl);
+    cy.visit(viewDependentsUrl);
     cy.findByRole('heading', {
       name: /Dependents on your VA benefits/i,
     }).should('exist');
@@ -53,13 +54,13 @@ describe('Dependency Verification', () => {
       statusCode: 200,
       body: { updateDiaries: 'true' },
     });
-    cy.visit(manifest.rootUrl);
+    cy.visit(viewDependentsUrl);
     cy.findByRole('heading', {
       name: /Please make sure your dependents are correct/i,
     }).should('exist');
     cy.injectAxe();
     cy.axeCheck();
-    cy.findByRole('button', { name: /Verify this is correct/i }).click();
+    cy.findByRole('button', { name: /This is correct/i }).click();
     cy.findByRole('heading', {
       name: /Thank you for verifying your dependents/i,
     }).should('exist');
@@ -77,13 +78,13 @@ describe('Dependency Verification', () => {
       statusCode: 500,
       body: { updateDiaries: 'true' },
     });
-    cy.visit(manifest.rootUrl);
+    cy.visit(viewDependentsUrl);
     cy.findByRole('heading', {
       name: /Dependents on your VA benefits/i,
     }).should('exist');
     cy.injectAxe();
     cy.axeCheck();
-    cy.findByRole('button', { name: /Verify this is correct/i }).click();
+    cy.findByRole('button', { name: /This is correct/i }).click();
     cy.findByRole('heading', {
       name: /We’re sorry. Something went wrong on our end/i,
     }).should('exist');

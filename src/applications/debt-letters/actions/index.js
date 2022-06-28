@@ -1,8 +1,8 @@
+import { isVAProfileServiceConfigured } from '@@vap-svc/util/local-vapsvc';
+import * as Sentry from '@sentry/browser';
 import recordEvent from '~/platform/monitoring/record-event';
 import { apiRequest } from '~/platform/utilities/api';
 import environment from '~/platform/utilities/environment';
-import { isVAProfileServiceConfigured } from '@@vap-svc/util/local-vapsvc';
-
 import { debtMockResponse, debtMockResponseVBMS } from '../utils/mockResponses';
 import { deductionCodes } from '../const/deduction-codes';
 
@@ -74,6 +74,12 @@ export const fetchDebtLettersVBMS = () => async dispatch => {
     return dispatch(fetchDebtLettersVBMSSuccess(filteredResponse));
   } catch (error) {
     recordEvent({ event: 'bam-get-veteran-vbms-info-failed' });
+    Sentry.withScope(scope => {
+      scope.setExtra('error', error);
+      Sentry.captureMessage(
+        `LTR - Debt Letters - fetchDebtLettersVBMS failed: ${error.detail}`,
+      );
+    });
     return dispatch(fetchDebtLettersVBMSFailure());
   }
 };
@@ -127,6 +133,12 @@ export const fetchDebtLetters = () => async dispatch => {
     );
   } catch (error) {
     recordEvent({ event: 'bam-get-veteran-dmc-info-failed' });
+    Sentry.withScope(scope => {
+      scope.setExtra('error', error);
+      Sentry.captureMessage(
+        `LTR - Debt Letters - fetchDebtLetters failed: ${error.detail}`,
+      );
+    });
     return dispatch(fetchDebtLettersFailure(error.errors));
   }
 };

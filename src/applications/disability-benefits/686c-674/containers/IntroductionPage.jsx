@@ -1,12 +1,12 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import LoadingIndicator from '@department-of-veterans-affairs/component-library/LoadingIndicator';
 import OMBInfo from '@department-of-veterans-affairs/component-library/OMBInfo';
 import FEATURE_FLAG_NAMES from 'platform/utilities/feature-toggles/featureFlagNames';
 import { toggleValues } from 'platform/site-wide/feature-toggles/selectors';
 import { focusElement } from 'platform/utilities/ui';
 import { hasSession } from 'platform/user/profile/utilities';
 import SaveInProgressIntro from 'platform/forms/save-in-progress/SaveInProgressIntro';
+
 import { verifyVaFileNumber } from '../actions';
 import { IntroductionPageHeader } from '../components/IntroductionPageHeader';
 import { IntroductionPageFormProcess } from '../components/IntroductionPageFormProcess';
@@ -16,6 +16,7 @@ import {
   ServerErrorAlert,
 } from '../config/helpers';
 import { isServerError } from '../config/utilities';
+import { PAGE_TITLE } from '../config/constants';
 
 class IntroductionPage extends React.Component {
   componentDidMount() {
@@ -38,11 +39,11 @@ class IntroductionPage extends React.Component {
     // Case 2: User is logged in and they have a valid va file number.
     // Case 3: User is logged in and they do not have a valid va file number.
     if (dependentsToggle === undefined) {
-      content = <LoadingIndicator message="Loading..." />;
+      content = <va-loading-indicator message="Loading..." />;
     } else if (!dependentsToggle) {
       content = (
         <>
-          <h1>Application to add or remove dependents</h1>
+          <h1>{PAGE_TITLE}</h1>
           <va-alert status="info">
             <h2 slot="headline" className="vads-u-font-size--h3">
               We’re still working on this feature
@@ -87,7 +88,7 @@ class IntroductionPage extends React.Component {
       );
     } else if (user?.login?.currentlyLoggedIn && isLoading) {
       ctaState = (
-        <LoadingIndicator message="Verifying veteran account information..." />
+        <va-loading-indicator message="Verifying veteran account information..." />
       );
       content = (
         <div className="schemaform-intro">

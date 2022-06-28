@@ -1,10 +1,8 @@
 import React from 'react';
 import moment from 'moment';
-import AdditionalInfo from '@department-of-veterans-affairs/component-library/AdditionalInfo';
+import { VaAdditionalInfo } from '@department-of-veterans-affairs/component-library/dist/react-bindings';
 
-import Telephone, {
-  CONTACTS,
-} from '@department-of-veterans-affairs/component-library/Telephone';
+import { CONTACTS } from '@department-of-veterans-affairs/component-library/contacts';
 
 import { recordEventOnce } from 'platform/monitoring/record-event';
 
@@ -32,8 +30,9 @@ const recordITFHelpEvent = () =>
   });
 
 const expander = (
-  <AdditionalInfo
-    triggerText="What is an Intent to File?"
+  <VaAdditionalInfo
+    trigger="What is an Intent to File?"
+    disableAnalytics
     onClick={recordITFHelpEvent}
   >
     <p className="vads-u-font-size--base">
@@ -42,7 +41,7 @@ const expander = (
       could start getting benefits while you prepare your disability claim and
       gather supporting documents.
     </p>
-  </AdditionalInfo>
+  </VaAdditionalInfo>
 );
 
 export const claimsIntakeAddress = (
@@ -64,7 +63,7 @@ export const itfError = (
         We’re sorry. Your Intent to File request didn’t go through because
         something went wrong on our end. For help creating an Intent to File a
         Claim for Compensation, please call Veterans Benefits Assistance at{' '}
-        <Telephone contact={CONTACTS.VA_BENEFITS} />, Monday through Friday,
+        <va-telephone contact={CONTACTS.VA_BENEFITS} />, Monday through Friday,
         8:00 a.m. to 9:00 p.m. ET. Or, you can fill out VA Form 21-0966 and
         submit it to:
       </p>

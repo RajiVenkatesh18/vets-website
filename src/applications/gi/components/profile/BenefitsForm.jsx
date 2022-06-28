@@ -1,136 +1,140 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
 import EbenefitsLink from 'platform/site-wide/ebenefits/containers/EbenefitsLink';
-
-import { renderLearnMoreLabel } from '../../utils/render';
+import ExpandingGroup from '@department-of-veterans-affairs/component-library/ExpandingGroup';
 import { ariaLabels } from '../../constants';
 import Dropdown from '../Dropdown';
-import ExpandingGroup from '@department-of-veterans-affairs/component-library/ExpandingGroup';
+import LearnMoreLabel from '../LearnMoreLabel';
 
-export class BenefitsForm extends React.Component {
-  state = { showYourMilitaryDetails: false };
-
-  static propTypes = {
-    showModal: PropTypes.func,
-    hideModal: PropTypes.func,
-    eligibilityChange: PropTypes.func,
-    showHeader: PropTypes.bool,
-    handleInputFocus: PropTypes.func,
-    giBillChapterOpen: PropTypes.arrayOf(PropTypes.bool),
-    yourMilitaryDetails: PropTypes.bool,
-  };
-
-  static defaultProps = {
-    showGbBenefit: false,
-    showHeader: false,
-    giBillChapterOpen: [],
-    yourMilitaryDetails: true,
-  };
-
-  cumulativeServiceOptions = () => [
-    { value: '1.0', label: '36+ months: 100%' }, // notice not 1.00
-    { value: '0.9', label: '30 months: 90%' },
-    { value: '0.8', label: '24 months: 80%' },
-    { value: '0.7', label: '18 months: 70%' },
-    { value: '0.6', label: '6 months: 60%' },
-    { value: '0.5', label: '90 days: 50%' },
-    { value: '1.00', label: 'GYSGT Fry Scholarship: 100%' }, // notice not 1.0
+const BenefitsForm = ({
+  children,
+  cumulativeService,
+  eligForPostGiBill,
+  eligibilityChange,
+  enlistmentService,
+  giBillChapter,
+  giBillChapterOpen,
+  handleInputFocus,
+  militaryStatus,
+  numberOfDependents,
+  optionDisabled,
+  showHeader,
+  showModal,
+  spouseActiveDuty,
+}) => {
+  const cumulativeServiceOptions = () => [
+    { optionValue: '1.0', optionLabel: '36+ months: 100%' }, // notice not 1.00
+    { optionValue: '0.9', optionLabel: '30 months: 90%' },
+    { optionValue: '0.8', optionLabel: '24 months: 80%' },
+    { optionValue: '0.7', optionLabel: '18 months: 70%' },
+    { optionValue: '0.6', optionLabel: '6 months: 60%' },
+    { optionValue: '0.5', optionLabel: '90 days: 50%' },
+    { optionValue: '1.00', optionLabel: 'GYSGT Fry Scholarship: 100%' }, // notice not 1.0
     {
-      value: 'service discharge',
-      label: 'Service-Connected Discharge: 100%',
+      optionValue: 'service discharge',
+      optionLabel: 'Service-Connected Discharge: 100%',
     },
-    { value: 'purple heart', label: 'Purple Heart Service: 100%' },
+    { optionValue: 'purple heart', optionLabel: 'Purple Heart Service: 100%' },
   ];
 
-  renderLearnMoreLabel = ({ text, modal, ariaLabel, labelFor }) =>
-    renderLearnMoreLabel({
-      text,
-      modal,
-      ariaLabel,
-      showModal: this.props.showModal,
-      component: this,
-      labelFor: labelFor || modal,
-    });
+  const renderLearnMoreLabel = ({
+    text,
+    modal,
+    ariaLabel,
+    labelFor,
+    buttonId,
+  }) => (
+    <LearnMoreLabel
+      text={text}
+      onClick={() => {
+        showModal(modal);
+      }}
+      ariaLabel={ariaLabel}
+      labelFor={labelFor || modal}
+      buttonId={buttonId}
+    />
+  );
 
-  handleMilitaryDetailsClick = () => {
-    this.setState({
-      showYourMilitaryDetails: !this.state.showYourMilitaryDetails,
-    });
-  };
-
-  renderYourMilitaryDetails() {
+  const renderYourMilitaryDetails = () => {
+    const chapter33Check = giBillChapter === '33a' || giBillChapter === '33b';
     return (
       <div>
-        <ExpandingGroup open={this.props.militaryStatus === 'spouse'}>
+        <ExpandingGroup open={militaryStatus === 'spouse'}>
           <Dropdown
             label="What's your military status?"
             name="militaryStatus"
             options={[
-              { value: 'veteran', label: 'Veteran' },
-              { value: 'active duty', label: 'Active Duty' },
+              { optionValue: 'veteran', optionLabel: 'Veteran' },
+              { optionValue: 'active duty', optionLabel: 'Active Duty' },
               {
-                value: 'national guard / reserves',
-                label: 'National Guard / Reserves',
+                optionValue: 'national guard / reserves',
+                optionLabel: 'National Guard / Reserves',
               },
-              { value: 'spouse', label: 'Spouse' },
-              { value: 'child', label: 'Child' },
+              { optionValue: 'spouse', optionLabel: 'Spouse' },
+              { optionValue: 'child', optionLabel: 'Child' },
             ]}
-            value={this.props.militaryStatus}
+            value={militaryStatus}
             alt="What's your military status?"
             visible
-            onChange={this.props.eligibilityChange}
-            onFocus={this.props.handleInputFocus}
+            onChange={eligibilityChange}
+            onFocus={handleInputFocus}
           />
           <Dropdown
-            label="Is your spouse on active duty?"
+            label="Is your spouse currently on active duty?"
             name="spouseActiveDuty"
             options={[
-              { value: 'yes', label: 'Yes' },
-              { value: 'no', label: 'No' },
+              { optionValue: 'yes', optionLabel: 'Yes' },
+              { optionValue: 'no', optionLabel: 'No' },
             ]}
-            value={this.props.spouseActiveDuty}
+            value={spouseActiveDuty}
             alt="Is your spouse on active duty?"
             visible
-            onChange={this.props.eligibilityChange}
-            onFocus={this.props.handleInputFocus}
+            onChange={eligibilityChange}
+            onFocus={handleInputFocus}
           />
         </ExpandingGroup>
         <ExpandingGroup
           open={
-            ['30', '31', '33'].includes(this.props.giBillChapter) ||
-            this.props.giBillChapterOpen.includes(true)
+            ['30', '31', '33a', '33b'].includes(giBillChapter) ||
+            giBillChapterOpen.includes(true)
           }
         >
           <Dropdown
-            label={this.renderLearnMoreLabel({
+            label={renderLearnMoreLabel({
               text: 'Which GI Bill benefit do you want to use?',
               modal: 'giBillChapter',
               ariaLabel: ariaLabels.learnMore.giBillBenefits,
+              buttonId: 'gi-bill-benefits-learn-more',
             })}
             name="giBillChapter"
             options={[
-              { value: '33', label: 'Post-9/11 GI Bill (Ch 33)' },
-              { value: '30', label: 'Montgomery GI Bill (Ch 30)' },
-              { value: '1606', label: 'Select Reserve GI Bill (Ch 1606)' },
+              { optionValue: '33a', optionLabel: 'Post-9/11 GI Bill (Ch 33)' },
+              { optionValue: '33b', optionLabel: 'Fry Scholarship (Ch 33)' },
+              { optionValue: '30', optionLabel: 'Montgomery GI Bill (Ch 30)' },
               {
-                value: '31',
-                label: 'Veteran Readiness and Employment',
+                optionValue: '1606',
+                optionLabel: 'Select Reserve GI Bill (Ch 1606)',
               },
               {
-                value: '35',
-                label: 'Dependents Educational Assistance (DEA)',
+                optionValue: '31',
+                optionLabel: 'Veteran Readiness and Employment (VR&E) (Ch 31)',
+              },
+              {
+                optionValue: '35',
+                optionLabel:
+                  "Survivors' and Dependents' Educational Assistance (DEA) (Ch 35)",
+                optionDisabled,
               },
             ]}
-            value={this.props.giBillChapter}
+            value={giBillChapter}
             alt="Which GI Bill benefit do you want to use?"
             visible
-            onChange={this.props.eligibilityChange}
-            onFocus={this.props.handleInputFocus}
+            onChange={eligibilityChange}
+            onFocus={handleInputFocus}
           />
           <div>
-            {this.props.militaryStatus === 'active duty' &&
-              this.props.giBillChapter === '33' && (
+            {militaryStatus === 'active duty' &&
+              chapter33Check && (
                 <div className="military-status-info warning form-group">
                   <i className="fa fa-warning" />
                   <a
@@ -147,7 +151,7 @@ export class BenefitsForm extends React.Component {
                   monthly housing allowance.
                 </div>
               )}
-            {this.props.giBillChapter === '31' && (
+            {giBillChapter === '31' && (
               <div className="military-status-info info form-group">
                 <i className="fa fa-info-circle" />
                 To apply for VR&E benefits, please{' '}
@@ -158,84 +162,100 @@ export class BenefitsForm extends React.Component {
               </div>
             )}
             <Dropdown
-              label={this.renderLearnMoreLabel({
+              label={renderLearnMoreLabel({
                 text: 'Cumulative Post-9/11 active-duty service',
                 modal: 'cumulativeService',
                 ariaLabel: ariaLabels.learnMore.post911Chapter33,
+                buttonId: 'cumulative-service-learn-more',
               })}
               name="cumulativeService"
-              options={this.cumulativeServiceOptions()}
-              value={this.props.cumulativeService}
+              options={cumulativeServiceOptions()}
+              value={cumulativeService}
               alt="Cumulative Post-9/11 active-duty service"
-              visible={this.props.giBillChapter === '33'}
-              onChange={this.props.eligibilityChange}
-              onFocus={this.props.handleInputFocus}
+              visible={chapter33Check}
+              onChange={eligibilityChange}
+              onFocus={handleInputFocus}
             />
             <Dropdown
-              label={this.renderLearnMoreLabel({
+              label={renderLearnMoreLabel({
                 text: 'Completed an enlistment of:',
                 modal: 'enlistmentService',
                 ariaLabel: ariaLabels.learnMore.montgomeryGIBill,
+                buttonId: 'enlistment-service',
               })}
               name="enlistmentService"
               options={[
-                { value: '3', label: '3 or more years' },
-                { value: '2', label: '2 or more years' },
+                { optionValue: '3', optionLabel: '3 or more years' },
+                { optionValue: '2', optionLabel: '2 or more years' },
               ]}
-              value={this.props.enlistmentService}
+              value={enlistmentService}
               alt="Completed an enlistment of:"
-              visible={this.props.giBillChapter === '30'}
-              onChange={this.props.eligibilityChange}
-              onFocus={this.props.handleInputFocus}
+              visible={giBillChapter === '30'}
+              onChange={eligibilityChange}
+              onFocus={handleInputFocus}
             />
             <Dropdown
               label="Are you eligible for the Post-9/11 GI Bill?"
               name="eligForPostGiBill"
               options={[
-                { value: 'yes', label: 'Yes' },
-                { value: 'no', label: 'No' },
+                { optionValue: 'yes', optionLabel: 'Yes' },
+                { optionValue: 'no', optionLabel: 'No' },
               ]}
-              value={this.props.eligForPostGiBill}
+              value={eligForPostGiBill}
               alt="Are you eligible for the Post-9/11 GI Bill?"
-              visible={this.props.giBillChapter === '31'}
-              onChange={this.props.eligibilityChange}
-              onFocus={this.props.handleInputFocus}
+              visible={giBillChapter === '31'}
+              onChange={eligibilityChange}
+              onFocus={handleInputFocus}
             />
             <Dropdown
               label="How many dependents do you have?"
               name="numberOfDependents"
               options={[
-                { value: '0', label: '0 Dependents' },
-                { value: '1', label: '1 Dependent' },
-                { value: '2', label: '2 Dependents' },
-                { value: '3', label: '3 Dependents' },
-                { value: '4', label: '4 Dependents' },
-                { value: '5', label: '5 Dependents' },
+                { optionValue: '0', optionLabel: '0 Dependents' },
+                { optionValue: '1', optionLabel: '1 Dependent' },
+                { optionValue: '2', optionLabel: '2 Dependents' },
+                { optionValue: '3', optionLabel: '3 Dependents' },
+                { optionValue: '4', optionLabel: '4 Dependents' },
+                { optionValue: '5', optionLabel: '5 Dependents' },
               ]}
-              value={this.props.numberOfDependents}
+              value={numberOfDependents}
               alt="How many dependents do you have?"
-              visible={
-                this.props.giBillChapter === '31' &&
-                this.props.eligForPostGiBill === 'no'
-              }
-              onChange={this.props.eligibilityChange}
-              onFocus={this.props.handleInputFocus}
+              visible={giBillChapter === '31' && eligForPostGiBill === 'no'}
+              onChange={eligibilityChange}
+              onFocus={handleInputFocus}
             />
-            {this.props.children}
+            {children}
           </div>
         </ExpandingGroup>
       </div>
     );
-  }
+  };
 
-  render() {
-    return (
-      <div className="eligibility-form">
-        {this.props.showHeader && <h2>Your benefits</h2>}
-        {this.renderYourMilitaryDetails()}
-      </div>
-    );
-  }
-}
+  return (
+    <div className="eligibility-form">
+      {showHeader && <h2>Your benefits</h2>}
+      {renderYourMilitaryDetails()}
+    </div>
+  );
+};
 
 export default BenefitsForm;
+
+BenefitsForm.propTypes = {
+  children: PropTypes.node,
+  cumulativeService: PropTypes.string,
+  eligForPostGiBill: PropTypes.string,
+  eligibilityChange: PropTypes.func,
+  enlistmentService: PropTypes.string,
+  giBillChapter: PropTypes.string,
+  giBillChapterOpen: PropTypes.arrayOf(PropTypes.bool),
+  handleInputFocus: PropTypes.func,
+  hideModal: PropTypes.func,
+  militaryStatus: PropTypes.string,
+  numberOfDependents: PropTypes.string,
+  optionDisabled: PropTypes.bool,
+  showHeader: PropTypes.bool,
+  showModal: PropTypes.func,
+  spouseActiveDuty: PropTypes.string,
+  yourMilitaryDetails: PropTypes.bool,
+};

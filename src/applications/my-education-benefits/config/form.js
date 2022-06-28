@@ -4,23 +4,26 @@ import { createSelector } from 'reselect';
 // Example of an imported schema:
 // import fullSchema from '../22-1990-schema.json';
 // eslint-disable-next-line no-unused-vars
-import fullSchema from '../22-1990-schema.json';
-
-// In a real app this would not be imported directly; instead the schema you
-// imported above would import and use these common definitions:
 import commonDefinitions from 'vets-json-schema/dist/definitions.json';
-import GetFormHelp from '../components/GetFormHelp';
 import preSubmitInfo from 'platform/forms/preSubmitInfo';
 import FormFooter from 'platform/forms/components/FormFooter';
-import AdditionalInfo from '@department-of-veterans-affairs/component-library/AdditionalInfo';
 import fullNameUI from 'platform/forms-system/src/js/definitions/fullName';
 import emailUI from 'platform/forms-system/src/js/definitions/email';
 import phoneUI from 'platform/forms-system/src/js/definitions/phone';
 import currentOrPastDateUI from 'platform/forms-system/src/js/definitions/currentOrPastDate';
 import dateUI from 'platform/forms-system/src/js/definitions/date';
 import * as address from 'platform/forms-system/src/js/definitions/address';
-
 import { VA_FORM_IDS } from 'platform/forms/constants';
+import environment from 'platform/utilities/environment';
+import bankAccountUI from 'platform/forms/definitions/bankAccount';
+import * as ENVIRONMENTS from 'site/constants/environments';
+import * as BUCKETS from 'site/constants/buckets';
+import fullSchema from '../22-1990-schema.json';
+
+// In a real app this would not be imported directly; instead the schema you
+// imported above would import and use these common definitions:
+import GetFormHelp from '../components/GetFormHelp';
+
 import manifest from '../manifest.json';
 
 import IntroductionPage from '../containers/IntroductionPage';
@@ -37,8 +40,6 @@ import PhoneReviewField from '../components/PhoneReviewField';
 import DateReviewField from '../components/DateReviewField';
 import EmailReviewField from '../components/EmailReviewField';
 
-import environment from 'platform/utilities/environment';
-
 import {
   chapter30Label,
   chapter1606Label,
@@ -52,16 +53,16 @@ import LearnMoreAboutMilitaryBaseTooltip from '../components/LearnMoreAboutMilit
 
 import {
   isValidPhone,
-  validatePhone,
   validateEmail,
   validateEffectiveDate,
+  validateMobilePhone,
+  validateHomePhone,
 } from '../utils/validation';
 
 import { createSubmissionForm } from '../utils/form-submit-transform';
-import merge from 'lodash/merge';
-import createDirectDepositPage from '../../edu-benefits/pages/directDeposit';
 import { directDepositDescription } from '../../edu-benefits/1990/helpers';
-import bankAccountUI from 'platform/forms/definitions/bankAccount';
+
+import { ELIGIBILITY } from '../actions';
 
 const {
   fullName,
@@ -124,7 +125,7 @@ const formPages = {
       title:
         'Do you qualify for an active duty kicker, sometimes called a College Fund?',
       additionalInfo: {
-        triggerText: 'What is an active duty kicker?',
+        trigger: 'What is an active duty kicker?',
         info:
           'Kickers, sometimes referred to as College Funds, are additional amounts of money that increase an individual’s basic monthly benefit. Each Department of Defense service branch (and not VA) determines who receives the kicker payments and the amount received. Kickers are included in monthly GI Bill payments from VA.',
       },
@@ -135,7 +136,7 @@ const formPages = {
       title:
         'Do you qualify for a reserve kicker, sometimes called a College Fund?',
       additionalInfo: {
-        triggerText: 'What is a reserve kicker?',
+        trigger: 'What is a reserve kicker?',
         info:
           'Kickers, sometimes referred to as College Funds, are additional amounts of money that increase an individual’s basic monthly benefit. Each Department of Defense service branch (and not VA) determines who receives the kicker payments and the amount received. Kickers are included in monthly GI Bill payments from VA.',
       },
@@ -151,7 +152,7 @@ const formPages = {
       order: 3,
       title: 'Were you commissioned as a result of Senior ROTC?',
       additionalInfo: {
-        triggerText: 'What is Senior ROTC?',
+        trigger: 'What is Senior ROTC?',
         info:
           'The Senior Reserve Officer Training Corps (SROTC)—more commonly referred to as the Reserve Officer Training Corps (ROTC)—is an officer training and scholarship program for postsecondary students authorized under Chapter 103 of Title 10 of the United States Code.',
       },
@@ -162,7 +163,7 @@ const formPages = {
       title:
         'Do you have a period of service that the Department of Defense counts towards an education loan payment?',
       additionalInfo: {
-        triggerText: 'What does this mean?',
+        trigger: 'What does this mean?',
         info:
           "This is a Loan Repayment Program, which is a special incentive that certain military branches offer to qualified applicants. Under a Loan Repayment Program, the branch of service will repay part of an applicant's qualifying student loans.",
       },
@@ -172,16 +173,14 @@ const formPages = {
 };
 
 const contactMethods = ['Email', 'Home Phone', 'Mobile Phone', 'Mail'];
+const benefits = [
+  ELIGIBILITY.CHAPTER30,
+  ELIGIBILITY.CHAPTER1606,
+  'CannotRelinquish',
+];
 
 function isOnlyWhitespace(str) {
   return str && !str.trim().length;
-}
-
-function startPhoneEditValidation({ phone }) {
-  if (!phone) {
-    return true;
-  }
-  return validatePhone(phone);
 }
 
 function titleCase(str) {
@@ -193,13 +192,14 @@ function phoneUISchema(category) {
     'ui:options': {
       hideLabelText: true,
       showFieldLabel: false,
-      startInEdit: formData => startPhoneEditValidation(formData),
       viewComponent: PhoneViewField,
     },
     'ui:objectViewField': PhoneReviewField,
     phone: {
       ...phoneUI(`${titleCase(category)} phone number`),
-      'ui:validations': [validatePhone],
+      'ui:validations': [
+        category === 'mobile' ? validateMobilePhone : validateHomePhone,
+      ],
     },
     isInternational: {
       'ui:title': `This ${category} phone number is international`,
@@ -274,9 +274,9 @@ function AdditionalConsiderationTemplate(page, formField) {
     additionalInfoView = {
       [additionalInfoViewName]: {
         'ui:description': (
-          <AdditionalInfo triggerText={additionalInfo.triggerText}>
+          <va-additional-info trigger={additionalInfo.trigger}>
             <p>{additionalInfo.info}</p>
-          </AdditionalInfo>
+          </va-additional-info>
         ),
       },
     };
@@ -337,9 +337,36 @@ function notGivingUpBenefitSelected(formData) {
 }
 
 function transform(metaData, form) {
-  const submission = createSubmissionForm(form.data);
+  const submission = createSubmissionForm(form.data, form.formId);
   return JSON.stringify(submission);
 }
+
+const checkImageSrc = (() => {
+  const bucket = environment.isProduction()
+    ? BUCKETS[ENVIRONMENTS.VAGOVPROD]
+    : BUCKETS[ENVIRONMENTS.VAGOVSTAGING];
+
+  return `${bucket}/img/check-sample.png`;
+})();
+
+const isValidAccountNumber = accountNumber => {
+  if (/^[0-9]*$/.test(accountNumber)) {
+    return accountNumber;
+  }
+  return false;
+};
+
+const validateAccountNumber = (
+  errors,
+  accountNumber,
+  formData,
+  schema,
+  errorMessages,
+) => {
+  if (!isValidAccountNumber(accountNumber)) {
+    errors.addError(errorMessages.pattern);
+  }
+};
 
 const formConfig = {
   rootUrl: manifest.rootUrl,
@@ -413,6 +440,13 @@ const formConfig = {
                 </>
               ),
             },
+            formId: {
+              'ui:title': 'Form ID',
+              'ui:disabled': true,
+              'ui:options': {
+                hideOnReview: true,
+              },
+            },
             claimantId: {
               'ui:title': 'Claimant ID',
               'ui:disabled': true,
@@ -458,7 +492,7 @@ const formConfig = {
               },
             },
             [formFields.dateOfBirth]: {
-              ...currentOrPastDateUI('Date of birth'),
+              ...currentOrPastDateUI('Your date of birth'),
               'ui:reviewField': CustomReviewDOBField,
             },
           },
@@ -466,6 +500,9 @@ const formConfig = {
             type: 'object',
             required: [formFields.dateOfBirth],
             properties: {
+              formId: {
+                type: 'string',
+              },
               claimantId: {
                 type: 'integer',
               },
@@ -492,17 +529,6 @@ const formConfig = {
               [formFields.dateOfBirth]: date,
             },
           },
-          // initialData: {
-          //   'view:userFullName': {
-          //     userFullName: {
-          //       first: 'Hector',
-          //       middle: 'Oliver',
-          //       last: 'Stanley',
-          //       suffix: 'Jr.',
-          //     },
-          //   },
-          //   dateOfBirth: '1992-07-23',
-          // },
         },
       },
     },
@@ -512,22 +538,6 @@ const formConfig = {
         [formPages.contactInformation.contactInformation]: {
           title: 'Phone numbers and email address',
           path: 'contact-information/email-phone',
-          // initialData: {
-          //   [formFields.viewPhoneNumbers]: {
-          //     mobilePhoneNumber: {
-          //       phone: '123-456-7890',
-          //       isInternational: false,
-          //     },
-          //     phoneNumber: {
-          //       phone: '098-765-4321',
-          //       isInternational: false,
-          //     },
-          //   },
-          //   [formFields.email]: {
-          //     email: 'hector.stanley@gmail.com',
-          //     confirmEmail: 'hector.stanley@gmail.com',
-          //   },
-          // },
           uiSchema: {
             'view:subHeadings': {
               'ui:description': (
@@ -565,7 +575,7 @@ const formConfig = {
               'ui:description': (
                 <>
                   <h4 className="form-review-panel-page-header vads-u-font-size--h5 meb-review-page-only">
-                    Phone numbers and email addresss
+                    Phone numbers and email addresses
                   </h4>
                   <p className="meb-review-page-only">
                     If you’d like to update your phone numbers and email
@@ -633,18 +643,6 @@ const formConfig = {
         [formPages.contactInformation.mailingAddress]: {
           title: 'Mailing address',
           path: 'contact-information/mailing-address',
-          // initialData: {
-          //   'view:mailingAddress': {
-          //     livesOnMilitaryBase: false,
-          //     [formFields.address]: {
-          //       street: '2222 Avon Street',
-          //       street2: 'Apt 6',
-          //       city: 'Arlington',
-          //       state: 'VA',
-          //       postalCode: '22205',
-          //     },
-          //   },
-          // },
           uiSchema: {
             'view:subHeadings': {
               'ui:description': (
@@ -841,9 +839,9 @@ const formConfig = {
                     const isYes = field.slice(0, 4).includes('Yes');
                     const phoneExist = !!formData['view:phoneNumbers']
                       .mobilePhoneNumber.phone;
-                    const isInternational =
-                      formData['view:phoneNumbers'].mobilePhoneNumber
-                        .isInternational;
+                    const { isInternational } = formData[
+                      'view:phoneNumbers'
+                    ].mobilePhoneNumber;
 
                     if (isYes) {
                       if (!phoneExist) {
@@ -872,12 +870,20 @@ const formConfig = {
             },
             'view:textMessagesAlert': {
               'ui:description': (
-                <va-alert onClose={function noRefCheck() {}} status="info">
+                <va-alert status="info">
                   <>
-                    If you choose to get text message notifications, messaging
-                    and data rates may apply. At this time, we can send text
-                    messages about your education benefits only to U.S. mobile
-                    phone numbers.
+                    If you choose to get text message notifications from VA’s GI
+                    Bill program, message and data rates may apply. Students
+                    will receive an average of two messages per month. At this
+                    time, we can only send text messages to U.S. mobile phone
+                    numbers. Text STOP to opt out or HELP for help.{' '}
+                    <a
+                      href="https://benefits.va.gov/gibill/isaksonroe/verification_of_enrollment.asp"
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      View Terms and Conditions and Privacy Policy.
+                    </a>
                   </>
                 </va-alert>
               ),
@@ -895,7 +901,7 @@ const formConfig = {
             },
             'view:noMobilePhoneAlert': {
               'ui:description': (
-                <va-alert onClose={function noRefCheck() {}} status="warning">
+                <va-alert status="warning">
                   <>
                     You can’t choose to get text message notifications because
                     we don’t have a mobile phone number on file for you.
@@ -916,7 +922,7 @@ const formConfig = {
             },
             'view:internationalTextMessageAlert': {
               'ui:description': (
-                <va-alert onClose={function noRefCheck() {}} status="warning">
+                <va-alert status="warning">
                   <>
                     You can’t choose to get text notifications because you have
                     an international mobile phone number. At this time, we can
@@ -991,6 +997,7 @@ const formConfig = {
               'ui:title': 'Service history',
               'ui:options': {
                 ...toursOfDutyUI['ui:options'],
+                keepInPageOnReview: true,
                 reviewTitle: <></>,
                 setEditState: () => {
                   return true;
@@ -1007,10 +1014,12 @@ const formConfig = {
             },
             'view:serviceHistory': {
               'ui:description': (
-                <p className="meb-review-page-only">
-                  If you’d like to update information related to your service
-                  history, edit the form fields below.
-                </p>
+                <div className="meb-review-page-only">
+                  <p>
+                    If you’d like to update information related to your service
+                    history, edit the form fields below.
+                  </p>
+                </div>
               ),
               [formFields.serviceHistoryIncorrect]: {
                 'ui:title': 'This information is incorrect and/or incomplete',
@@ -1040,6 +1049,11 @@ const formConfig = {
               [formFields.toursOfDuty]: {
                 ...toursOfDuty,
                 title: '', // Hack to prevent console warning
+                items: {
+                  type: 'object',
+                  properties: {},
+                },
+                required: [],
               },
               'view:serviceHistory': {
                 type: 'object',
@@ -1055,52 +1069,6 @@ const formConfig = {
               },
             },
           },
-          initialData: {
-            // [formFields.toursOfDuty]: [
-            //   {
-            //     // applyPeriodToSelected: true,
-            //     dateRange: {
-            //       from: '2011-08-01',
-            //       to: '2014-07-30',
-            //     },
-            //     exclusionPeriods: [
-            //       {
-            //         from: '2011-08-01',
-            //         to: '2011-09-14',
-            //       },
-            //       {
-            //         from: '2011-11-01',
-            //         to: '2011-12-14',
-            //       },
-            //     ],
-            //     separationReason: 'Expiration term of service',
-            //     serviceBranch: 'Navy',
-            //     serviceCharacter: 'Honorable',
-            //     // serviceStatus: 'Active Duty',
-            //     trainingPeriods: [
-            //       {
-            //         from: '2011-08-01',
-            //         to: '2011-09-14',
-            //       },
-            //       {
-            //         from: '2011-11-01',
-            //         to: '2011-12-14',
-            //       },
-            //     ],
-            //   },
-            //   {
-            //     // applyPeriodToSelected: true,
-            //     dateRange: {
-            //       from: '2015-04-04',
-            //       to: '2017-10-12',
-            //     },
-            //     separationReason: 'Disability',
-            //     serviceBranch: 'Navy',
-            //     serviceCharacter: 'Honorable',
-            //     // serviceStatus: 'Active Duty',
-            //   },
-            // ],
-          },
         },
       },
     },
@@ -1111,6 +1079,7 @@ const formConfig = {
           path: 'benefit-selection',
           title: 'Benefit selection',
           subTitle: "You're applying for the Post-9/11 GI Bill®",
+          depends: formData => formData.eligibility?.length,
           uiSchema: {
             'view:post911Notice': {
               'ui:description': (
@@ -1127,7 +1096,7 @@ const formConfig = {
                       application.
                     </strong>
                   </p>
-                  <AdditionalInfo triggerText="Why do I have to give up a benefit?">
+                  <va-additional-info trigger="Why do I have to give up a benefit?">
                     <p>
                       The law says if you are eligible for both the Post-9/11 GI
                       Bill and another education benefit based on the same
@@ -1135,7 +1104,7 @@ const formConfig = {
                       qualifying period of active duty can only be used for one
                       VA education benefit.
                     </p>
-                  </AdditionalInfo>
+                  </va-additional-info>
                 </>
               ),
             },
@@ -1173,6 +1142,25 @@ const formConfig = {
                       'aria-describedby': 'CannotRelinquish',
                     },
                   },
+                  updateSchema: (() => {
+                    const filterEligibility = createSelector(
+                      state => state.eligibility,
+                      eligibility => {
+                        if (!eligibility || !eligibility.length) {
+                          return benefits;
+                        }
+
+                        return {
+                          enum: benefits.filter(
+                            benefit =>
+                              eligibility.includes(benefit) ||
+                              benefit === 'CannotRelinquish',
+                          ),
+                        };
+                      },
+                    );
+                    return (form, state) => filterEligibility(form, state);
+                  })(),
                 },
                 'ui:errorMessages': {
                   required: 'Please select an answer.',
@@ -1256,7 +1244,7 @@ const formConfig = {
                 properties: {
                   [formFields.benefitRelinquished]: {
                     type: 'string',
-                    enum: ['Chapter30', 'Chapter1606', 'CannotRelinquish'],
+                    enum: benefits,
                   },
                 },
               },
@@ -1279,7 +1267,7 @@ const formConfig = {
       },
     },
     additionalConsiderationsChapter: {
-      title: 'Additional Considerations',
+      title: 'Additional considerations',
       pages: {
         [formPages.additionalConsiderations.activeDutyKicker.name]: {
           ...AdditionalConsiderationTemplate(
@@ -1322,52 +1310,81 @@ const formConfig = {
       },
     },
     bankAccountInfoChapter: {
-      title: 'Personal Information',
+      title: 'Direct deposit',
       pages: {
-        [formPages.directDeposit]: merge(
-          {},
-          createDirectDepositPage(fullSchema),
-          {
-            path: 'direct-deposit',
-            uiSchema: {
-              'ui:description': directDepositDescription,
-              bankAccount: {
-                ...bankAccountUI,
-                'ui:order': [
-                  'accountType',
-                  'accountNumber',
-                  'routingNumber',
-                  'learnMore',
-                ],
-                learnMore: {
-                  'ui:description': (
-                    <>
-                      <img
-                        style={{ marginTop: '1rem' }}
-                        src="/img/check-sample.png"
-                        alt="Example of a check showing where the account and routing numbers are"
-                      />
-                      <p>Where can I find these numbers?</p>
-                      <p>
-                        The bank routing number is the first 9 digits on the
-                        bottom left corner of a printed check. Your account
-                        number is the second set of numbers on the bottom of a
-                        printed check, just to the right of the bank routing
-                        number.
-                      </p>
-                      <va-additional-info trigger="Learn More">
-                        <p key="2b">
-                          If you don’t have a printed check, you can sign in to
-                          your online banking institution for this information
-                        </p>
-                      </va-additional-info>
-                    </>
-                  ),
+        [formPages.directDeposit]: {
+          path: 'direct-deposit',
+          uiSchema: {
+            'ui:description': directDepositDescription,
+            bankAccount: {
+              ...bankAccountUI,
+              'ui:order': ['accountType', 'accountNumber', 'routingNumber'],
+              accountNumber: {
+                'ui:title': 'Bank account number',
+                'ui:validations': [validateAccountNumber],
+                'ui:errorMessages': {
+                  pattern: 'Please enter only numbers',
                 },
               },
             },
+            'view:learnMore': {
+              'ui:description': (
+                <>
+                  <img
+                    key="check-image-src"
+                    style={{ marginTop: '1rem' }}
+                    src={checkImageSrc}
+                    alt="Example of a check showing where the account and routing numbers are"
+                  />
+                  <p key="learn-more-title">Where can I find these numbers?</p>
+                  <p key="learn-more-description">
+                    The bank routing number is the first 9 digits on the bottom
+                    left corner of a printed check. Your account number is the
+                    second set of numbers on the bottom of a printed check, just
+                    to the right of the bank routing number.
+                  </p>
+                  <va-additional-info key="learn-more-btn" trigger="Learn More">
+                    <p key="btn-copy">
+                      If you don’t have a printed check, you can sign in to your
+                      online banking institution for this information
+                    </p>
+                  </va-additional-info>
+                </>
+              ),
+            },
           },
-        ),
+          schema: {
+            type: 'object',
+            properties: {
+              bankAccount: {
+                type: 'object',
+                required: [
+                  formFields.accountType,
+                  formFields.accountNumber,
+                  formFields.routingNumber,
+                ],
+                properties: {
+                  accountType: {
+                    type: 'string',
+                    enum: ['checking', 'savings'],
+                  },
+                  routingNumber: {
+                    type: 'string',
+                    pattern: '^\\d{9}$',
+                  },
+                  accountNumber: {
+                    type: 'string',
+                    required: [],
+                  },
+                },
+              },
+              'view:learnMore': {
+                type: 'object',
+                properties: {},
+              },
+            },
+          },
+        },
       },
     },
   },

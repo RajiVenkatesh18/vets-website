@@ -6,23 +6,12 @@ import { shallow } from 'enzyme';
 import { App } from '.';
 
 describe('Events <App>', () => {
-  it('does not render when feature toggle disabled', () => {
+  it('renders what we expect', () => {
     // Set up.
     const wrapper = shallow(<App />);
 
     // Assertions.
-    expect(wrapper.type()).to.equal(null);
-
-    // Clean up.
-    wrapper.unmount();
-  });
-
-  it('renders what we expect with feature toggle enabled', () => {
-    // Set up.
-    const wrapper = shallow(<App showEventsV2 />);
-
-    // Assertions.
-    expect(wrapper.text()).includes('Filter by');
+    expect(wrapper.find('Events')).to.have.length(1);
 
     // Clean up.
     wrapper.unmount();

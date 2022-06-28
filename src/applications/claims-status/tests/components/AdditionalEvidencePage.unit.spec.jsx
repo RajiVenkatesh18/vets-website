@@ -15,7 +15,7 @@ describe('<AdditionalEvidencePage>', () => {
     const tree = SkinDeep.shallowRender(
       <AdditionalEvidencePage params={params} loading />,
     );
-    expect(tree.everySubTree('LoadingIndicator')).not.to.be.empty;
+    expect(tree.everySubTree('va-loading-indicator')).not.to.be.empty;
   });
   it('should render upload error alert', () => {
     const claim = {
@@ -105,7 +105,7 @@ describe('<AdditionalEvidencePage>', () => {
         submitFiles={onSubmit}
       />,
     );
-    tree.subTree('Connect(AddFilesForm)').props.onSubmit();
+    tree.subTree('AddFilesForm').props.onSubmit();
     expect(onSubmit.calledWith(1, null, files)).to.be.true;
   });
   it('should reset uploads and set title on mount', () => {

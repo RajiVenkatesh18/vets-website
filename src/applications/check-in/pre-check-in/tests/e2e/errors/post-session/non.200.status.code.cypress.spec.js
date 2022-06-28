@@ -1,20 +1,19 @@
-import { generateFeatureToggles } from '../../../../api/local-mock-api/mocks/feature.toggles';
-import '../../support/commands';
+import '../../../../../tests/e2e/commands';
 
-import validateVeteran from '../../../../../tests/e2e/pages/ValidateVeteran';
-
-import Error from '../../../../../tests/e2e/pages/Error';
-
-import apiInitializer from '../../support/ApiInitializer';
+import ApiInitializer from '../../../../../api/local-mock-api/e2e/ApiInitializer';
+import ValidateVeteran from '../../../../../tests/e2e/pages/ValidateVeteran';
+import Error from '../../pages/Error';
 
 describe('Pre-Check In Experience ', () => {
   describe('Error handling', () => {
     describe('POST /check_in/v2/session/', () => {
-      beforeEach(function() {
-        cy.intercept('GET', '/v0/feature_toggles*', generateFeatureToggles({}));
-        apiInitializer.initializeSessionGet.withSuccessfulNewSession();
-
-        apiInitializer.initializeSessionPost.withFailure(400);
+      beforeEach(() => {
+        const {
+          initializeFeatureToggle,
+          initializeSessionGet,
+        } = ApiInitializer;
+        initializeFeatureToggle.withCurrentFeatures();
+        initializeSessionGet.withSuccessfulNewSession();
       });
       afterEach(() => {
         cy.window().then(window => {
@@ -22,14 +21,28 @@ describe('Pre-Check In Experience ', () => {
         });
       });
       it('bad status code (400)', () => {
+        const { initializeSessionPost } = ApiInitializer;
+        initializeSessionPost.withFailure(400);
         cy.visitPreCheckInWithUUID();
         // page: Validate
-        validateVeteran.validatePageLoaded();
-        validateVeteran.validateVeteran();
-        cy.injectAxe();
-        cy.axeCheck();
+        ValidateVeteran.validatePage.preCheckIn();
+        ValidateVeteran.validateVeteran();
+        cy.injectAxeThenAxeCheck();
 
-        validateVeteran.attemptToGoToNextPage();
+        ValidateVeteran.attemptToGoToNextPage();
+
+        Error.validatePageLoaded();
+      });
+      it('bad status code (401)', () => {
+        const { initializeSessionPost } = ApiInitializer;
+        initializeSessionPost.withFailure(401);
+        cy.visitPreCheckInWithUUID();
+        // page: Validate
+        ValidateVeteran.validatePage.preCheckIn();
+        ValidateVeteran.validateVeteran();
+        cy.injectAxeThenAxeCheck();
+
+        ValidateVeteran.attemptToGoToNextPage();
 
         Error.validatePageLoaded();
       });

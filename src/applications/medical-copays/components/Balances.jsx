@@ -1,18 +1,19 @@
 import React from 'react';
 import { getMedicalCenterNameByID } from 'platform/utilities/medical-centers/medical-centers';
+import PropTypes from 'prop-types';
 import BalanceCard from './BalanceCard';
 
-export const Balances = ({ statementData }) => {
+export const Balances = ({ statements }) => {
   const single = <h2>What you owe to your facility</h2>;
   const multiple = (
-    <h2>What you owe to your {statementData?.length} facilities</h2>
+    <h2>What you owe to your {statements?.length} facilities</h2>
   );
 
   return (
     <>
-      {statementData?.length === 1 ? single : multiple}
+      {statements?.length === 1 ? single : multiple}
 
-      {statementData?.map((balance, idx) => {
+      {statements?.map((balance, idx) => {
         const facilityName =
           balance.station.facilityName ||
           getMedicalCenterNameByID(balance.station.facilitYNum);
@@ -30,6 +31,10 @@ export const Balances = ({ statementData }) => {
       })}
     </>
   );
+};
+
+Balances.propTypes = {
+  statements: PropTypes.array,
 };
 
 export default Balances;

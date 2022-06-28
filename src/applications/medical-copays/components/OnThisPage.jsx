@@ -4,13 +4,13 @@ export const OnThisPage = () => (
   <>
     <h2>On this page</h2>
     <div className="vads-u-font-family--sans vads-u-display--flex vads-u-flex-direction--column">
-      <a href="#download-statements" className="vads-u-margin-y--1">
+      <a href="#statement-list" className="vads-u-margin-y--1">
         <i
           aria-hidden="true"
           role="img"
           className="fas fa-arrow-down vads-u-padding-right--1 vads-u-font-size--sm"
         />
-        Download your statements
+        Your statements
       </a>
       <a href="#how-to-pay" className="vads-u-margin-y--1">
         <i

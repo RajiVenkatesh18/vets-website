@@ -1,69 +1,31 @@
-import React, { useEffect } from 'react';
-import { focusElement } from 'platform/utilities/ui';
-import AdditionalInfo from '@department-of-veterans-affairs/component-library/AdditionalInfo';
-import OMBInfo from '@department-of-veterans-affairs/component-library/OMBInfo';
-import { VA_FORM_IDS } from 'platform/forms/constants';
+/* eslint-disable react/prop-types */
+import React from 'react';
+import { connect } from 'react-redux';
 import FormTitle from 'platform/forms-system/src/js/components/FormTitle';
 import SaveInProgressIntro from 'platform/forms/save-in-progress/SaveInProgressIntro';
+import { VA_FORM_IDS } from 'platform/forms/constants';
+
+import OMBInfo from '@department-of-veterans-affairs/component-library/OMBInfo';
 
 import HowToApplyPost911GiBill from '../components/HowToApplyPost911GiBill';
-import { connect } from 'react-redux';
 import { fetchUser } from '../selectors/userDispatch';
+import LoadingIndicator from '../components/LoadingIndicator';
 
-import environment from 'platform/utilities/environment';
-
-export const IntroductionPage = ({ user, route }) => {
-  const CLAIMANT_URL = `${environment.API_URL}/meb_api/v0/claimant_info`;
-
-  const SaveInProgressComponent = (
-    <SaveInProgressIntro
-      testActionLink
-      user={user}
-      prefillEnabled={route.formConfig.prefillEnabled}
-      messages={route.formConfig.savedFormMessages}
-      pageList={route.pageList}
-      hideUnauthedStartLink
-      startText="Start your application"
-    />
-  );
-
-  const handleRedirect = async response => {
-    if (!response.ok && response.status === 404) {
-      window.location.href =
-        '/education/apply-for-education-benefits/application/1990/';
-    }
-    return response;
-  };
-
-  const checkIfClaimantExists = async () =>
-    fetch(CLAIMANT_URL)
-      .then(response => handleRedirect(response))
-      .catch(err => err);
-
-  useEffect(
-    () => {
-      focusElement('.va-nav-breadcrumbs-list');
-      if (user.login.currentlyLoggedIn) {
-        checkIfClaimantExists().then(res => res);
-      }
-    },
-    [user?.login?.currentlyLoggedIn, checkIfClaimantExists],
-  );
-
+export const IntroductionPage = ({ firstName, eligibility, user, route }) => {
   return (
     <div className="schemaform-intro">
       <FormTitle title="Apply for VA education benefits" />
       <p>Equal to VA Form 22-1990 (Application for VA Education Benefits)</p>
       <HowToApplyPost911GiBill />
-      <h3>Follow these steps to get started</h3>
+      <h2>Follow these steps to get started</h2>
       <div className="process schemaform-process">
         <ol>
           <li className="process-step list-one">
-            <h4>Check your eligibility</h4>
+            <h3>Check your eligibility</h3>
             <p>
               Make sure you meet our eligibility requirements before you apply.
             </p>
-            <AdditionalInfo triggerText="What are the Post-9/11 GI Bill eligibility requirements?">
+            <va-additional-info trigger="What are the Post-9/11 GI Bill eligibility requirements?">
               <p>
                 <strong>At least one of these must be true:</strong>
               </p>
@@ -86,10 +48,10 @@ export const IntroductionPage = ({ user, route }) => {
                   disability
                 </li>
               </ul>
-            </AdditionalInfo>
+            </va-additional-info>
           </li>
           <li className="process-step list-two">
-            <h4>Gather your information</h4>
+            <h3>Gather your information</h3>
             <p>
               <strong>Here’s what you’ll need to apply</strong>:
             </p>
@@ -99,12 +61,12 @@ export const IntroductionPage = ({ user, route }) => {
             </ul>
           </li>
           <li className="process-step list-three">
-            <h4>Start your application</h4>
+            <h3>Start your application</h3>
             <p>
               We’ll take you through each step of the process. It should take
               about 15 minutes.
             </p>
-            <AdditionalInfo triggerText="What happens after I apply?">
+            <va-additional-info trigger="What happens after I apply?">
               <p>
                 After you apply, you may get an automatic decision. If we
                 approve your application, you’ll be able to download your
@@ -119,20 +81,37 @@ export const IntroductionPage = ({ user, route }) => {
                 about 30 days. And we’ll contact you if we need more
                 information.
               </p>
-            </AdditionalInfo>
+            </va-additional-info>
           </li>
         </ol>
       </div>
 
       {user?.login?.currentlyLoggedIn &&
+        firstName &&
+        eligibility &&
         !user.profile.savedForms.some(
           p => p.form === VA_FORM_IDS.FORM_22_1990EZ,
-        ) && <h3>Begin your application for education benefits</h3>}
+        ) && <h2>Begin your application for education benefits</h2>}
 
-      {SaveInProgressComponent}
+      {!user.login.currentlyLoggedIn || (firstName && eligibility) ? (
+        <SaveInProgressIntro
+          testActionLink
+          user={user}
+          prefillEnabled={route.formConfig.prefillEnabled}
+          messages={route.formConfig.savedFormMessages}
+          pageList={route.pageList}
+          hideUnauthedStartLink
+          headingLevel={2}
+          startText="Start your application"
+        />
+      ) : (
+        <LoadingIndicator />
+      )}
 
       {!user?.login?.currentlyLoggedIn && (
-        <a href="#">Start your application without signing in</a>
+        <a href="https://www.va.gov/education/apply-for-education-benefits/application/1990/applicant/information">
+          Start your application without signing in
+        </a>
       )}
 
       <OMBInfo resBurden={15} ombNumber="2900-0154" expDate="02/28/2023" />
@@ -141,6 +120,8 @@ export const IntroductionPage = ({ user, route }) => {
 };
 
 const mapStateToProps = state => ({
+  firstName: state.data?.formData?.data?.attributes?.claimant?.firstName,
+  eligibility: state.data?.eligibility,
   user: fetchUser(state),
 });
 

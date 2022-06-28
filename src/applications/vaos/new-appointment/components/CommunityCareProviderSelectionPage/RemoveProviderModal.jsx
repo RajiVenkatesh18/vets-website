@@ -1,11 +1,8 @@
 import React from 'react';
-import Modal from '@department-of-veterans-affairs/component-library/Modal';
+import { VaModal } from '@department-of-veterans-affairs/component-library/dist/react-bindings';
+import PropTypes from 'prop-types';
 
-export default function RemoveProviderModal({
-  onClose,
-  provider,
-  distanceInMiles = null,
-}) {
+export default function RemoveProviderModal({ onClose, provider }) {
   const title = 'Are you sure you want to remove this provider?';
   const content = (
     <>
@@ -13,15 +10,10 @@ export default function RemoveProviderModal({
         {provider.name}
       </span>
       <span className="vads-u-display--block">{provider.address?.line}</span>
-      <span className="vads-u-display--block">
+      <span className="vads-u-display--block vads-u-margin-bottom--1">
         {provider.address?.city}, {provider.address?.state}{' '}
         {provider.address?.postalCode}
       </span>
-      {distanceInMiles && (
-        <span className="vads-u-display--block vads-u-font-size--sm vads-u-font-weight--bold vads-u-margin-bottom--2">
-          {distanceInMiles} miles
-        </span>
-      )}
       <button type="button" onClick={() => onClose(true)}>
         Yes, remove provider
       </button>
@@ -37,8 +29,20 @@ export default function RemoveProviderModal({
   );
 
   return (
-    <Modal id="removeProviderModal" visible onClose={onClose} title={title}>
+    <VaModal
+      id="removeProviderModal"
+      visible
+      onCloseEvent={onClose}
+      modalTitle={title}
+      data-testid="removeProviderModal"
+      status="warning"
+      role="alertdialog"
+    >
       {content}
-    </Modal>
+    </VaModal>
   );
 }
+RemoveProviderModal.propTypes = {
+  provider: PropTypes.object.isRequired,
+  onClose: PropTypes.func.isRequired,
+};

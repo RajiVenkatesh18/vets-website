@@ -23,8 +23,15 @@ const DebtLetterCard = ({ debt, setActiveDebt }) => {
     debt.benefitType,
   );
 
+  const onDetailLinkClick = function() {
+    setActiveDebt(debt);
+  };
+
   return (
-    <article className="vads-u-background-color--gray-lightest vads-u-padding--3 vads-u-margin-bottom--2">
+    <article
+      className="vads-u-background-color--gray-lightest vads-u-padding--3 vads-u-margin-bottom--2"
+      data-testid="debt-list-item"
+    >
       <h3 className="vads-u-margin--0">{debtCardHeading}</h3>
 
       {mostRecentHistory && (
@@ -66,8 +73,9 @@ const DebtLetterCard = ({ debt, setActiveDebt }) => {
 
       <Link
         className="usa-button"
-        onClick={() => setActiveDebt(debt)}
+        onClick={onDetailLinkClick}
         to={`/debt-detail/${debt.fileNumber + debt.deductionCode}`}
+        data-testclass="debt-details-button"
       >
         Go to debt details
         <i
@@ -89,7 +97,11 @@ DebtLetterCard.propTypes = {
     ),
     deductionCode: PropTypes.string,
     originalAr: PropTypes.number,
+    benefitType: PropTypes.string,
+    diaryCode: PropTypes.string,
+    fileNumber: PropTypes.string,
   }),
+  setActiveDebt: PropTypes.func,
 };
 
 DebtLetterCard.defaultProps = {

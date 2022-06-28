@@ -1,3 +1,4 @@
+import set from 'lodash/set';
 import { toggleValues } from '~/platform/site-wide/feature-toggles/selectors';
 import FEATURE_FLAG_NAMES from '~/platform/utilities/feature-toggles/featureFlagNames';
 import {
@@ -6,6 +7,7 @@ import {
   isSignedUpForCNPDirectDeposit,
   isSignedUpForEDUDirectDeposit,
 } from './util';
+import { createNotListedTextKey } from './util/personal-information/personalInformationUtils';
 
 export const cnpDirectDepositInformation = state =>
   state.vaProfile?.cnpPaymentInformation;
@@ -72,7 +74,10 @@ export const fullNameLoadError = state => {
 };
 
 export const personalInformationLoadError = state => {
-  return state.vaProfile?.personalInformation?.errors;
+  return (
+    state.vaProfile?.personalInformation?.errors ||
+    state.vaProfile?.personalInformation?.error
+  );
 };
 
 export const militaryInformationLoadError = state => {
@@ -80,4 +85,46 @@ export const militaryInformationLoadError = state => {
 };
 
 export const showProfileLGBTQEnhancements = state =>
-  toggleValues(state)[FEATURE_FLAG_NAMES.profileEnhancements];
+  toggleValues(state)?.[FEATURE_FLAG_NAMES.profileEnhancements] || false;
+
+export const showBadAddressIndicator = state =>
+  toggleValues(state)?.[FEATURE_FLAG_NAMES.profileShowBadAddressIndicator] ||
+  false;
+
+export const forceBadAddressIndicator = state =>
+  toggleValues(state)?.[FEATURE_FLAG_NAMES.profileForceBadAddressIndicator] ||
+  false;
+
+export const hasBadAddress = state =>
+  state.user?.profile?.vapContactInfo?.mailingAddress?.badAddress;
+
+export const profileShowAddressChangeModal = state =>
+  toggleValues(state)?.[FEATURE_FLAG_NAMES.profileShowAddressChangeModal] ||
+  false;
+
+export const profileShowPronounsAndSexualOrientation = state =>
+  toggleValues(state)?.[
+    FEATURE_FLAG_NAMES.profileShowPronounsAndSexualOrientation
+  ];
+
+export const profileDoNotRequireInternationalZipCode = state =>
+  toggleValues(state)?.[
+    FEATURE_FLAG_NAMES.profileDoNotRequireInternationalZipCode
+  ];
+
+export function selectVAProfilePersonalInformation(state, fieldName) {
+  const fieldValue = state?.vaProfile?.personalInformation?.[fieldName];
+
+  const notListedTextKey = createNotListedTextKey(fieldName);
+
+  const notListedTextValue =
+    state?.vaProfile?.personalInformation?.[notListedTextKey];
+
+  if (!fieldValue && !notListedTextValue) return null;
+
+  const result = set({}, fieldName, fieldValue);
+
+  return notListedTextValue
+    ? set(result, notListedTextKey, notListedTextValue)
+    : result;
+}

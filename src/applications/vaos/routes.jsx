@@ -4,7 +4,7 @@ import asyncLoader from 'platform/utilities/ui/asyncLoader';
 import VAOSApp from './components/VAOSApp';
 import ErrorBoundary from './components/ErrorBoundary';
 import { captureError } from './utils/error';
-import LoadingIndicator from '@department-of-veterans-affairs/component-library/LoadingIndicator';
+
 import ErrorMessage from './components/ErrorMessage';
 import FullWidthLayout from './components/FullWidthLayout';
 import { AppointmentList } from './appointment-list';
@@ -20,10 +20,9 @@ function handleLoadError(err) {
         <ErrorMessage />
       </FullWidthLayout>
     );
-  } else {
-    window.location.replace(`${window.location.pathname}?retry=1`);
-    return () => <LoadingIndicator message="Reloading page" />;
   }
+  window.location.replace(`${window.location.pathname}?retry=1`);
+  return () => <va-loading-indicator message="Reloading page" />;
 }
 
 export default function createRoutesWithStore(store) {

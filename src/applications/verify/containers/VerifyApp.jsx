@@ -6,7 +6,6 @@ import LoginGovSVG from 'platform/user/authentication/components/LoginGovSVG';
 import LoadingIndicator from '@department-of-veterans-affairs/component-library/LoadingIndicator';
 import recordEvent from 'platform/monitoring/record-event';
 
-import { loginGov } from 'platform/user/authentication/selectors';
 import { verify } from 'platform/user/authentication/utilities';
 import { hasSession } from 'platform/user/profile/utilities';
 import SubmitSignInForm from 'platform/static-data/SubmitSignInForm';
@@ -46,7 +45,9 @@ export class VerifyApp extends React.Component {
     if (this.props.profile.verified) {
       const nextParams = new URLSearchParams(window.location.search);
       const nextPath = nextParams.get('next');
-      window.location.replace(nextPath || '/');
+      if (nextPath && nextPath !== 'loginModal') {
+        window.location.replace(nextPath || '/');
+      }
     }
   }
 
@@ -145,7 +146,6 @@ const mapStateToProps = state => {
   return {
     login: userState.login,
     profile: userState.profile,
-    loginGovEnabled: loginGov(state),
   };
 };
 

@@ -15,7 +15,7 @@ describe('<DocumentRequestPage>', () => {
     const tree = SkinDeep.shallowRender(
       <DocumentRequestPage params={params} loading />,
     );
-    expect(tree.everySubTree('LoadingIndicator')).not.to.be.empty;
+    expect(tree.everySubTree('va-loading-indicator')).not.to.be.empty;
     expect(tree.everySubTree('.claim-container')).to.be.empty;
   });
   it('should render upload error alert', () => {
@@ -152,7 +152,7 @@ describe('<DocumentRequestPage>', () => {
         submitFiles={onSubmit}
       />,
     );
-    tree.subTree('Connect(AddFilesForm)').props.onSubmit();
+    tree.subTree('AddFilesForm').props.onSubmit();
     expect(onSubmit.called).to.be.true;
   });
   it('should reset uploads and set title on mount', () => {

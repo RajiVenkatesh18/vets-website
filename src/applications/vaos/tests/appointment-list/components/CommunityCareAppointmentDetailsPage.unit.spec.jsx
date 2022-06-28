@@ -3,6 +3,9 @@ import moment from 'moment';
 import MockDate from 'mockdate';
 import { expect } from 'chai';
 import { mockFetch } from 'platform/testing/unit/helpers';
+import userEvent from '@testing-library/user-event';
+import sinon from 'sinon';
+import { fireEvent } from '@testing-library/react';
 import { getCCAppointmentMock } from '../../mocks/v0';
 import {
   mockAppointmentInfo,
@@ -19,10 +22,7 @@ import {
 } from '../../mocks/setup';
 import { createMockAppointmentByVersion } from '../../mocks/data';
 
-import userEvent from '@testing-library/user-event';
 import { AppointmentList } from '../../../appointment-list';
-import sinon from 'sinon';
-import { fireEvent } from '@testing-library/react';
 import { getICSTokens } from '../../../utils/calendar';
 
 const initialState = {
@@ -32,6 +32,7 @@ const initialState = {
     vaOnlineSchedulingPast: true,
     // eslint-disable-next-line camelcase
     show_new_schedule_view_appointments_page: true,
+    vaOnlineSchedulingStatusImprovement: false,
   },
 };
 
@@ -101,8 +102,7 @@ describe('VAOS <CommunityCareAppointmentDetailsPage>', () => {
     expect(screen.getByText(/Community care/)).to.be.ok;
     expect(screen.getByText(/123/)).to.be.ok;
     expect(screen.getByText(/Burke,/)).to.be.ok;
-    expect(screen.getByRole('link', { name: /7 0 3. 5 5 5. 1 2 6 4./ })).to.be
-      .ok;
+    expect(screen.getByTestId('facility-telephone')).to.exist;
     expect(
       screen.getByRole('heading', {
         level: 2,
@@ -188,7 +188,7 @@ describe('VAOS <CommunityCareAppointmentDetailsPage>', () => {
     ).to.be.ok;
 
     expect(screen.getByText(/Community care/)).to.be.ok;
-    expect(screen.getByText(/Rick Katz/)).to.be.ok;
+    expect(screen.getByText(/My Eye Dr/)).to.be.ok;
   });
 
   it('should fire a print request when print button clicked', async () => {
@@ -408,7 +408,7 @@ describe('VAOS <CommunityCareAppointmentDetailsPage>', () => {
     expect(tokens.has('UID')).to.be.true;
 
     // TODO: Should this be provider practice instead of name???
-    expect(tokens.get('SUMMARY')).to.equal('Appointment at Rick Katz');
+    expect(tokens.get('SUMMARY')).to.equal('Appointment at My Eye Dr');
 
     // The description text longer than 74 characters should start newlines with a tab character
     let description = tokens.get('DESCRIPTION');
@@ -562,7 +562,11 @@ describe('VAOS <CommunityCareAppointmentDetailsPage> with VAOS service', () => {
       kind: 'cc',
       practitioners: [
         {
-          identifier: { system: null, value: '123' },
+          identifier: [{ system: null, value: '123' }],
+          name: {
+            family: 'Medical Care',
+            given: ['Atlantic'],
+          },
         },
       ],
       description: 'community care appointment',
@@ -570,7 +574,11 @@ describe('VAOS <CommunityCareAppointmentDetailsPage> with VAOS service', () => {
       start: appointmentTime,
       communityCareProvider: {
         practiceName: 'Atlantic Medical Care',
+        provider: {
+          providerName: 'Atlantic Medical Care',
+        },
       },
+      serviceType: 'audiology',
     };
 
     const appointment = createMockAppointmentByVersion({
@@ -614,6 +622,7 @@ describe('VAOS <CommunityCareAppointmentDetailsPage> with VAOS service', () => {
       }),
     ).to.be.ok;
 
+    expect(screen.getByText(/Type of care/)).to.be.ok;
     expect(screen.getByText(/Community care/)).to.be.ok;
     expect(await screen.findByText(/Atlantic Medical Care/)).to.be.ok;
     expect(
@@ -668,7 +677,11 @@ describe('VAOS <CommunityCareAppointmentDetailsPage> with VAOS service', () => {
       kind: 'cc',
       practitioners: [
         {
-          identifier: { system: null, value: '123' },
+          identifier: [{ system: null, value: '123' }],
+          name: {
+            family: 'Medical Care',
+            given: ['Atlantic'],
+          },
         },
       ],
       description: 'community care appointment',
@@ -724,7 +737,7 @@ describe('VAOS <CommunityCareAppointmentDetailsPage> with VAOS service', () => {
       kind: 'cc',
       practitioners: [
         {
-          identifier: { system: null, value: '123' },
+          identifier: [{ system: null, value: '123' }],
         },
       ],
       description: 'community care appointment',
@@ -769,7 +782,7 @@ describe('VAOS <CommunityCareAppointmentDetailsPage> with VAOS service', () => {
     ).to.be.ok;
 
     // Then the canceled status message should be displayed
-    expect(screen.getByText(/Facility canceled this appointment/)).to.be.ok;
+    expect(screen.getByText(/Facility canceled your appointment/)).to.be.ok;
 
     // Then the 'Add to calendar' link should not be displayed
     expect(screen.queryByText(/Add to calendar/)).not.to.exist;

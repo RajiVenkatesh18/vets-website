@@ -1,35 +1,41 @@
 import Timeouts from 'platform/testing/e2e/timeouts';
-import { format, subDays } from 'date-fns';
+import { format, parseISO, subDays } from 'date-fns';
 
 class Introduction {
-  validatePageLoaded() {
+  validatePageLoaded = () => {
     cy.get('h1', { timeout: Timeouts.slow })
       .should('be.visible')
       .and('have.text', 'Answer pre-check-in questions');
-  }
-  validateMultipleAppointmentIntroText(appointmentDate = new Date()) {
+  };
+
+  validateMultipleAppointmentIntroText = (
+    appointmentDate = new Date().setDate(new Date().getDate() + 1),
+  ) => {
     cy.get('p[data-testid="appointment-day-location"]').contains(
       `Your appointments are on ${format(
         appointmentDate,
         'MMMM dd, Y',
       )} at LOMA LINDA VA CLINIC.`,
     );
-  }
-  validateSingleAppointmentIntroText(appointmentDate = new Date()) {
+  };
+
+  validateSingleAppointmentIntroText = (appointmentDate = new Date()) => {
     cy.get('p[data-testid="appointment-day-location"]').contains(
       `Your appointment on ${format(
         appointmentDate,
         'MMMM dd, Y',
       )} at LOMA LINDA VA CLINIC.`,
     );
-  }
-  countAppointmentList(expectedLength) {
+  };
+
+  countAppointmentList = expectedLength => {
     cy.get('ol[data-testid="appointment-list"] li').should(
       'have.length',
       expectedLength,
     );
-  }
-  toggleAccordion(accordionIndex, open) {
+  };
+
+  toggleAccordion = (accordionIndex, open) => {
     if (open) {
       cy.get('[data-testid="intro-accordion-item"]')
         .shadow()
@@ -61,17 +67,19 @@ class Introduction {
         .eq(accordionIndex)
         .should('not.be.visible');
     }
-  }
-  validateExpirationDate(appointmentTime) {
+  };
+
+  validateExpirationDate = appointmentTime => {
     cy.get('[data-testid="expiration-date"]').contains(
-      format(subDays(appointmentTime, 1), 'M/dd/Y'),
+      format(subDays(parseISO(appointmentTime), 1), 'M/dd/Y'),
     );
-  }
-  attemptToGoToNextPage() {
+  };
+
+  attemptToGoToNextPage = () => {
     cy.get('div[data-testid="intro-wrapper"] div[data-testid="start-button"] a')
       .eq(0)
       .click();
-  }
+  };
 }
 
 export default new Introduction();

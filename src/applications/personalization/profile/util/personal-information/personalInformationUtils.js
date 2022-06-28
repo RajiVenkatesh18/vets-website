@@ -1,49 +1,71 @@
-import TextWidget from 'platform/forms-system/src/js/widgets/TextWidget';
-import RadioWidget from 'platform/forms-system/src/js/widgets/RadioWidget';
+import { mapValues } from 'lodash';
+import moment from 'moment';
 
-const genderOptions = [
-  'woman',
-  'man',
-  'transgenderWoman',
-  'transgenderMan',
-  'nonBinary',
-  'preferNotToAnswer',
-  'genderNotListed',
-];
-const genderLabels = {
-  woman: 'Woman',
-  man: 'Man',
-  transgenderWoman: 'Transgender woman',
-  transgenderMan: 'Transgender man',
-  nonBinary: 'Non-binary',
-  preferNotToAnswer: 'Prefer not to answer',
-  genderNotListed: 'A gender not listed here',
+import TextWidget from 'platform/forms-system/src/js/widgets/TextWidget';
+import OtherTextField from '@@profile/components/personal-information/OtherTextField';
+import { NOT_SET_TEXT } from '../../constants';
+import DeselectableObjectField from '../../components/personal-information/DeselectableObjectField';
+
+export const notListedKeySuffix = 'NotListedText';
+
+export const createNotListedTextKey = fieldName =>
+  `${fieldName}${notListedKeySuffix}`;
+
+export const createBooleanSchemaPropertiesFromOptions = obj =>
+  mapValues(obj, () => {
+    return { type: 'boolean' };
+  });
+
+export const createUiTitlePropertiesFromOptions = obj => {
+  return Object.entries(obj).reduce((accumulator, [key, value]) => {
+    accumulator[key] = { 'ui:title': value };
+    return accumulator;
+  }, {});
 };
-const sexualOrientationOptions = [
-  'lesBianGayHomosexual',
-  'straightOrHeterosexual',
-  'bisexual',
-  'queer',
-  'dontKnow',
-  'preferNotToAnswer',
-  'sexualOrientationNotListed',
-];
+
+const pronounsLabels = {
+  heHimHis: 'He/him/his',
+  sheHerHers: 'She/her/hers',
+  theyThemTheirs: 'They/them/theirs',
+  zeZirZirs: 'Ze/zir/zirs',
+  useMyPreferredName: 'Use my preferred name',
+};
+
+const genderLabels = {
+  M: 'Man',
+  B: 'Non-binary',
+  TM: 'Transgender man',
+  TF: 'Transgender woman',
+  F: 'Woman',
+  N: 'Prefer not to answer',
+  O: 'A gender not listed here',
+};
+
+// use the keys from the genderLabels object as the option values
+const genderOptions = Object.keys(genderLabels);
+
 const sexualOrientationLabels = {
-  lesBianGayHomosexual: 'Lesbian, gay, or homosexual',
+  lesbianGayHomosexual: 'Lesbian, gay, or homosexual',
   straightOrHeterosexual: 'Straight or heterosexual',
   bisexual: 'Bisexual',
   queer: 'Queer',
   dontKnow: 'Don’t know',
-  preferNotToAnswer: 'Prefer not to answer',
-  sexualOrientationNotListed: 'A sexual orientation not listed here',
+  preferNotToAnswer: 'Prefer not to answer (un-checks other options)',
 };
+
+const allLabels = {
+  pronouns: pronounsLabels,
+  genderIdentity: genderLabels,
+  sexualOrientation: sexualOrientationLabels,
+};
+
 export const personalInformationFormSchemas = {
   preferredName: {
     type: 'object',
     properties: {
       preferredName: {
         type: 'string',
-        pattern: '^[A-Za-z\\s]+$',
+        pattern: '^[A-Za-z]+$',
         minLength: 1,
         maxLength: 25,
       },
@@ -53,13 +75,12 @@ export const personalInformationFormSchemas = {
   pronouns: {
     type: 'object',
     properties: {
-      heHimHis: { type: 'boolean' },
-      sheHerHers: { type: 'boolean' },
-      theyThemTheirs: { type: 'boolean' },
-      zeZirZirs: { type: 'boolean' },
-      useMyPreferredName: { type: 'boolean' },
-      preferNotToAnswer: { type: 'boolean' },
-      pronounsNotListed: { type: 'boolean' },
+      ...createBooleanSchemaPropertiesFromOptions(pronounsLabels),
+      ...{
+        pronounsNotListedText: {
+          type: 'string',
+        },
+      },
     },
     required: [],
   },
@@ -71,14 +92,15 @@ export const personalInformationFormSchemas = {
         enum: genderOptions,
       },
     },
-    required: [],
   },
   sexualOrientation: {
     type: 'object',
     properties: {
-      sexualOrientation: {
-        type: 'string',
-        enum: sexualOrientationOptions,
+      ...createBooleanSchemaPropertiesFromOptions(sexualOrientationLabels),
+      ...{
+        sexualOrientationNotListedText: {
+          type: 'string',
+        },
       },
     },
     required: [],
@@ -91,39 +113,79 @@ export const personalInformationUiSchemas = {
       'ui:widget': TextWidget,
       'ui:title': `Provide your preferred name (25 characters maximum)`,
       'ui:errorMessages': {
-        pattern: 'Preferred name required',
+        pattern: 'This field accepts alphabetic characters only',
       },
     },
   },
   pronouns: {
     'ui:description': 'Select all of your pronouns',
     'ui:widget': 'checkbox',
-    heHimHis: { 'ui:title': 'He/him/his' },
-    sheHerHers: { 'ui:title': 'She/her/hers' },
-    theyThemTheirs: { 'ui:title': 'They/them/theirs' },
-    zeZirZirs: { 'ui:title': 'Ze/zir/zirs' },
-    useMyPreferredName: { 'ui:title': 'Use my preferred name' },
-    preferNotToAnswer: { 'ui:title': 'Prefer not to answer' },
-    pronounsNotListed: {
-      'ui:title': 'Pronouns not listed here',
+    ...createUiTitlePropertiesFromOptions(pronounsLabels),
+    pronounsNotListedText: {
+      'ui:options': {
+        hideLabelText: true,
+        widget: OtherTextField,
+        title:
+          'If not listed, please provide your preferred pronouns (255 characters maximum)',
+      },
     },
   },
   genderIdentity: {
     genderIdentity: {
-      'ui:widget': RadioWidget,
+      'ui:widget': 'radio',
       'ui:title': `Select your gender identity`,
       'ui:options': {
         labels: genderLabels,
+        enumOptions: genderOptions,
       },
     },
   },
   sexualOrientation: {
-    sexualOrientation: {
-      'ui:widget': RadioWidget,
-      'ui:title': `Select your sexual orientation`,
-      'ui:options': {
-        labels: sexualOrientationLabels,
-      },
+    'ui:field': DeselectableObjectField,
+    'ui:widget': 'checkbox',
+    'ui:description': `Select your sexual orientation`,
+    ...createUiTitlePropertiesFromOptions(sexualOrientationLabels),
+    sexualOrientationNotListedText: {
+      'ui:title':
+        'If not listed, please provide your sexual orientation (255 characters maximum)',
     },
   },
 };
+
+export const formatIndividualLabel = (key, label) => {
+  if (key === 'preferNotToAnswer') {
+    return label.replace('(un-checks other options)', '').trim();
+  }
+  return label;
+};
+
+export const formatGenderIdentity = genderData => {
+  if (genderData?.code) {
+    return genderLabels?.[genderData.code];
+  }
+  return null;
+};
+
+export const formatMultiSelectAndText = (data, fieldName) => {
+  const notListedTextKey = `${fieldName}NotListedText`;
+
+  const fieldLength = data?.[fieldName]?.length;
+
+  // handle no checkboxes selected and only a text field value
+  if ((!fieldLength || fieldLength < 1) && data[notListedTextKey]) {
+    return data[notListedTextKey];
+  }
+
+  const mergedValues = [
+    ...data[fieldName].map(key =>
+      formatIndividualLabel(key, allLabels[fieldName][key]),
+    ),
+    ...(data?.[notListedTextKey] ? [data[notListedTextKey]] : []),
+  ];
+
+  if (mergedValues.length > 0) return mergedValues.join('; ');
+
+  return null;
+};
+
+export const renderDOB = dob => (dob ? moment(dob).format('LL') : NOT_SET_TEXT);

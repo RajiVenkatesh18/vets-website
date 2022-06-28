@@ -747,8 +747,6 @@ export function getStatusContents(appeal, name = {}) {
                 PO Box 4444
                 <br />
                 Janesville, WI 53547-4444
-                <br />
-                Fax 844-531-7818
               </p>
             </div>
           )}
@@ -2170,7 +2168,8 @@ export function sortByLastUpdated(item1, item2) {
 
   if (moment(lastUpdatedDate1).isAfter(lastUpdatedDate2)) {
     return -1;
-  } else if (moment(lastUpdatedDate1).isBefore(lastUpdatedDate2)) {
+  }
+  if (moment(lastUpdatedDate1).isBefore(lastUpdatedDate2)) {
     return 1;
   }
   return 0;
@@ -2184,5 +2183,22 @@ export function getVisibleRows(list, currentPage) {
   return list.slice(currentIndex, currentIndex + ROWS_PER_PAGE);
 }
 
-export const uploadPdfLimitFeature = state =>
-  state.featureToggles?.['evss_upload_limit_150mb'];
+/**
+ * Calculate the item range based on the current page and number of rows/page.
+ * This is used to
+ * @param {Number} page - current page
+ * @param {Number} totalItems - total number of entries
+ * @returns
+ */
+export const getPageRange = (page, totalItems) => {
+  const firstItem = (page - 1) * ROWS_PER_PAGE + 1;
+  const itemsLeftToShow = totalItems - (page - 1) * ROWS_PER_PAGE;
+  const lastItem =
+    itemsLeftToShow > ROWS_PER_PAGE
+      ? firstItem + ROWS_PER_PAGE - 1
+      : firstItem + itemsLeftToShow - 1;
+  return {
+    start: firstItem,
+    end: lastItem,
+  };
+};

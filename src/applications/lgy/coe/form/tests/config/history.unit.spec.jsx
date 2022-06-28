@@ -65,7 +65,7 @@ describe('COE applicant service history', () => {
           definitions={formConfig.defaultDefinitions}
           uiSchema={uiSchema}
           data={{
-            servicePeriods: [
+            periodsOfService: [
               {
                 serviceBranch: 'Air Force',
                 dateRange: {

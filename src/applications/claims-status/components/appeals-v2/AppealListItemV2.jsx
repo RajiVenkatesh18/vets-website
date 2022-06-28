@@ -74,21 +74,19 @@ export default function AppealListItem({ appeal, name, external = false }) {
     }
   }
 
-  appealTitle += ` updated on ${moment(updatedEventDateString).format(
+  appealTitle += `\n updated on ${moment(updatedEventDateString).format(
     'MMMM D, YYYY',
   )}`;
   appealTitle = capitalizeWord(appealTitle);
 
   return (
     <div className="claim-list-item-container">
-      <h2 className="claim-list-item-header-v2 vads-u-font-size--h3">
-        {appealTitle}
-      </h2>
+      <h3 className="claim-list-item-header-v2">{appealTitle}</h3>
       <div className="card-status">
         {!external && (
           <div
             className={`status-circle ${
-              appeal.attributes.active ? 'open' : 'closed'
+              appeal.attributes.active ? 'open-claim' : 'closed-claim'
             }`}
           />
         )}
@@ -123,7 +121,7 @@ export default function AppealListItem({ appeal, name, external = false }) {
       )}
       {external && (
         <Link
-          aria-label={`View details of ${appealTitle} `}
+          aria-label={`View details of ${appealTitle}`}
           className="vads-c-action-link--blue"
           href={`/track-claims/appeals/${appeal.id}/status`}
         >
@@ -136,6 +134,7 @@ export default function AppealListItem({ appeal, name, external = false }) {
 
 AppealListItem.propTypes = {
   appeal: PropTypes.shape({
+    id: PropTypes.string,
     attributes: PropTypes.shape({
       status: PropTypes.shape({
         type: PropTypes.string.isRequired,
@@ -152,11 +151,12 @@ AppealListItem.propTypes = {
       issues: PropTypes.array.isRequired,
       description: PropTypes.string.isRequired,
     }),
+    type: PropTypes.string,
   }),
+  external: PropTypes.bool,
   name: PropTypes.shape({
     first: PropTypes.string,
     middle: PropTypes.string,
     last: PropTypes.string,
   }),
-  external: PropTypes.bool,
 };

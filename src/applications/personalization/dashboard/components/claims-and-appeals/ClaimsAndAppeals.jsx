@@ -1,9 +1,6 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import AlertBox, {
-  ALERT_TYPE,
-} from '@department-of-veterans-affairs/component-library/AlertBox';
-import LoadingIndicator from '@department-of-veterans-affairs/component-library/LoadingIndicator';
 
 import backendServices from '~/platform/user/profile/constants/backendServices';
 import {
@@ -81,7 +78,10 @@ const ClaimsAndAppeals = ({
   if (shouldShowLoadingIndicator) {
     return (
       <div data-testid="dashboard-section-claims-and-appeals">
-        <LoadingIndicator message="We’re loading your information." />
+        <va-loading-indicator
+          label="Loading"
+          message="We’re loading your information."
+        />
       </div>
     );
   }
@@ -93,14 +93,19 @@ const ClaimsAndAppeals = ({
         data-testid="dashboard-section-claims-and-appeals"
       >
         <div className="vads-l-col--12 medium-screen:vads-l-col--8 medium-screen:vads-u-padding-right--3">
-          <AlertBox
-            status={ALERT_TYPE.ERROR}
-            headline="We can’t access any claims or appeals information right now"
-          >
-            We’re sorry. Something went wrong on our end. If you have any claims
-            or appeals, you won’t be able to access your claims or appeals
-            information right now. Please refresh or try again later.
-          </AlertBox>
+          <va-alert status="error">
+            <h2 slot="headline">
+              We can’t access any claims or appeals information right now
+            </h2>
+            <div>
+              <p>
+                We’re sorry. Something went wrong on our end. If you have any
+                claims or appeals, you won’t be able to access your claims or
+                appeals information right now. Please refresh or try again
+                later.
+              </p>
+            </div>
+          </va-alert>
         </div>
       </div>
     );
@@ -109,7 +114,7 @@ const ClaimsAndAppeals = ({
   if (highlightedClaimOrAppeal || openClaimsOrAppealsCount > 0) {
     return (
       <div data-testid="dashboard-section-claims-and-appeals">
-        <h2>Claims & appeals</h2>
+        <h2>Claims and appeals</h2>
         <div className="vads-l-row">
           <DashboardWidgetWrapper>
             <HighlightedClaimAppeal
@@ -118,6 +123,9 @@ const ClaimsAndAppeals = ({
             />
             {!highlightedClaimOrAppeal ? (
               <div className="vads-u-margin-top--2p5">
+                <h3 className="sr-only">
+                  Popular actions for Claims and Appeals
+                </h3>
                 <ClaimsAndAppealsCTA />
               </div>
             ) : null}
@@ -125,6 +133,9 @@ const ClaimsAndAppeals = ({
           {highlightedClaimOrAppeal ? (
             <DashboardWidgetWrapper>
               <div className="vads-u-margin-top--2p5 small-desktop-screen:vads-u-margin-top--0">
+                <h3 className="sr-only">
+                  Popular actions for Claims and Appeals
+                </h3>
                 <ClaimsAndAppealsCTA />
               </div>
             </DashboardWidgetWrapper>
@@ -132,9 +143,21 @@ const ClaimsAndAppeals = ({
         </div>
       </div>
     );
-  } else {
-    return null;
   }
+  return null;
+};
+
+ClaimsAndAppeals.propTypes = {
+  dataLoadingDisabled: PropTypes.bool.isRequired,
+  hasAPIError: PropTypes.bool.isRequired,
+  loadAppeals: PropTypes.bool.isRequired,
+  loadClaims: PropTypes.bool.isRequired,
+  shouldLoadAppeals: PropTypes.bool.isRequired,
+  shouldLoadClaims: PropTypes.bool.isRequired,
+  shouldShowLoadingIndicator: PropTypes.bool.isRequired,
+  userFullName: PropTypes.string.isRequired,
+  appealsData: PropTypes.arrayOf(PropTypes.object),
+  claimsData: PropTypes.arrayOf(PropTypes.object),
 };
 
 const isClaimsAvailableSelector = createIsServiceAvailableSelector(
@@ -158,8 +181,7 @@ const hasAppealsErrorSelector = state => {
 const mapStateToProps = state => {
   const claimsState = state.disability.status;
   const claimsV2Root = claimsState.claimsV2;
-  const appealsLoading = claimsV2Root.appealsLoading;
-  const claimsLoading = claimsV2Root.claimsLoading;
+  const { appealsLoading, claimsLoading } = claimsV2Root;
   const hasAppealsError = hasAppealsErrorSelector(state);
   const hasClaimsError =
     claimsV2Root.claimsAvailability === claimsAvailability.UNAVAILABLE;

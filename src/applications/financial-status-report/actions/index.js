@@ -1,15 +1,15 @@
 import moment from 'moment';
 import { isVAProfileServiceConfigured } from '@@vap-svc/util/local-vapsvc';
-
 import environment from 'platform/utilities/environment';
 import localStorage from 'platform/utilities/storage/localStorage';
-import { deductionCodes } from '../../debt-letters/const/deduction-codes';
-import { DEBTS_FETCH_SUCCESS } from '../../debt-letters/actions';
-import { debtMockResponse } from '../../debt-letters/utils/mockResponses';
 import {
   fetchAndUpdateSessionExpiration as fetch,
   apiRequest,
 } from 'platform/utilities/api';
+import * as Sentry from '@sentry/browser';
+import { deductionCodes } from '../../debt-letters/const/deduction-codes';
+import { DEBTS_FETCH_SUCCESS } from '../../debt-letters/actions';
+import { debtMockResponse } from '../../debt-letters/utils/mockResponses';
 import {
   FSR_API_ERROR,
   FSR_RESET_ERRORS,
@@ -30,23 +30,30 @@ export const fetchFormStatus = () => async dispatch => {
     });
   }
 
-  fetch(`${environment.API_URL}/v0/in_progress_forms/5655`, {
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Key-Inflection': 'camel',
-      'Source-App-Name': window.appName,
-    },
-  })
-    .then(response => response.json())
-    .then(response => {
-      if (response.errors) {
-        dispatch({
-          type: FSR_API_ERROR,
-          error: response,
-        });
-      }
+  try {
+    fetch(`${environment.API_URL}/v0/in_progress_forms/5655`, {
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Key-Inflection': 'camel',
+        'Source-App-Name': window.appName,
+      },
+    })
+      .then(response => response.json())
+      .then(response => {
+        if (response.errors) {
+          dispatch({
+            type: FSR_API_ERROR,
+            error: response,
+          });
+        }
+      });
+  } catch (error) {
+    Sentry.withScope(scope => {
+      scope.setExtra('error', error);
+      Sentry.captureMessage(`FSR fetchDebts failed: ${error.detail}`);
     });
+  }
   return dispatch({
     type: FSR_RESET_ERRORS,
   });
@@ -88,29 +95,14 @@ export const fetchDebts = () => async (dispatch, getState) => {
       debts: filteredResponse,
     });
   } catch (error) {
+    Sentry.withScope(scope => {
+      scope.setExtra('error', error);
+      Sentry.captureMessage(`FSR fetchDebts failed: ${error.detail}`);
+    });
     dispatch({
       type: FSR_API_ERROR,
       error,
     });
     throw new Error(error);
   }
-};
-
-export const downloadPDF = () => {
-  const options = {
-    method: 'GET',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Key-Inflection': 'camel',
-      'Source-App-Name': window.appName,
-    },
-  };
-
-  return fetch(
-    `${environment.API_URL}/v0/financial_status_reports/download_pdf`,
-    options,
-  ).catch(error => {
-    throw new Error(error);
-  });
 };

@@ -6,6 +6,7 @@ import sinon from 'sinon';
 import { mockEventListeners } from 'platform/testing/unit/helpers';
 import localStorage from 'platform/utilities/storage/localStorage';
 import SignInModal from 'platform/user/authentication/components/SignInModal';
+import { ACCOUNT_TRANSITION_DISMISSED } from 'platform/user/authentication/constants';
 import { Main, mapStateToProps } from '../../containers/Main';
 
 describe('<Main>', () => {
@@ -17,20 +18,23 @@ describe('<Main>', () => {
     userGreeting: null,
     showFormSignInModal: false,
     showLoginModal: false,
-    utilitiesMenuIsOpen: {
-      search: false,
-      help: false,
-      account: false,
-    },
+    showTransitionSuccessModal: false,
+    showTransitionModal: false,
+    utilitiesMenuIsOpen: { search: false, help: false, account: false },
     getBackendStatuses: sinon.spy(),
     toggleFormSignInModal: sinon.spy(),
     toggleLoginModal: sinon.spy(),
+    toggleAccountTransitionModal: sinon.spy(),
+    closeAccountTransitionModal: sinon.spy(),
+    toggleAccountTransitionSuccessModal: sinon.spy(),
+    closeAccountTransitionSuccessModal: sinon.spy(),
     toggleSearchHelpUserMenu: sinon.spy(),
     updateLoggedInStatus: sinon.spy(),
     initializeProfile: sinon.spy(),
   };
 
   let oldWindow = null;
+  const appendSpy = sinon.spy(Main.prototype, 'appendNextParameter');
 
   beforeEach(() => {
     oldWindow = global.window;
@@ -44,9 +48,14 @@ describe('<Main>', () => {
   });
 
   afterEach(() => {
+    appendSpy.reset();
     props.getBackendStatuses.reset();
     props.toggleFormSignInModal.reset();
     props.toggleLoginModal.reset();
+    props.toggleAccountTransitionModal.reset();
+    props.closeAccountTransitionModal.reset();
+    props.toggleAccountTransitionSuccessModal.reset();
+    props.closeAccountTransitionSuccessModal.reset();
     props.toggleSearchHelpUserMenu.reset();
     props.updateLoggedInStatus.reset();
     props.initializeProfile.reset();
@@ -58,6 +67,14 @@ describe('<Main>', () => {
     const wrapper = shallow(<Main {...props} />, { context: { store: {} } });
     expect(wrapper.find('SearchHelpSignIn').exists()).to.be.true;
     expect(wrapper.find(SignInModal).exists()).to.be.true;
+    wrapper.unmount();
+  });
+
+  it('should NOT render on the Unified Sign in Page (USiP)', () => {
+    global.window.location.pathname = '/sign-in';
+    const wrapper = shallow(<Main {...props} />);
+    expect(wrapper.find('SearchHelpSignIn').exists()).to.be.false;
+    expect(wrapper.find(SignInModal).exists()).to.be.false;
     wrapper.unmount();
   });
 
@@ -73,6 +90,17 @@ describe('<Main>', () => {
 
     it('should open the login modal if there is a redirect URL and there is no active session', () => {
       global.window.location.search = { next: '/account' };
+      const wrapper = shallow(<Main {...props} />);
+      global.window.simulate('load');
+      expect(props.updateLoggedInStatus.calledOnce).to.be.true;
+      expect(props.updateLoggedInStatus.calledWith(false)).to.be.true;
+      expect(props.toggleLoginModal.calledOnce).to.be.true;
+      expect(props.toggleLoginModal.calledWith(true)).to.be.true;
+      wrapper.unmount();
+    });
+
+    it('should open the login modal if there is a ?next=loginModal Param and there is no active session', () => {
+      global.window.location.search = { next: 'loginModal' };
       const wrapper = shallow(<Main {...props} />);
       global.window.simulate('load');
       expect(props.updateLoggedInStatus.calledOnce).to.be.true;
@@ -100,6 +128,76 @@ describe('<Main>', () => {
       expect(props.updateLoggedInStatus.called).to.be.false;
       wrapper.unmount();
     });
+
+    it('should open the account transition modal when logged in, and user property mhvTransitionEligible is true', () => {
+      const mutatedProps = {
+        ...props,
+        currentlyLoggedIn: true,
+        user: {
+          mhvTransitionEligible: true,
+          mhvTransitionComplete: false,
+        },
+        signInServiceName: 'mhv',
+      };
+      const wrapper = shallow(<Main {...props} />);
+      global.window.simulate('load');
+      wrapper.setProps(mutatedProps);
+      expect(props.toggleAccountTransitionModal.calledWith(true)).to.be.true;
+      wrapper.unmount();
+    });
+
+    it('should set dismissed in storage when accountTransitionModal is closed', () => {
+      const mutatedProps = {
+        ...props,
+        currentlyLoggedIn: true,
+        user: {
+          mhvTransitionEligible: true,
+          mhvTransitionComplete: false,
+        },
+        signInServiceName: 'mhv',
+      };
+      const wrapper = shallow(<Main {...props} />);
+      global.window.simulate('load');
+      wrapper.setProps(mutatedProps);
+      expect(props.toggleAccountTransitionModal.calledWith(true)).to.be.true;
+      wrapper.instance().closeAccountTransitionModal();
+      expect(localStorage.getItem(ACCOUNT_TRANSITION_DISMISSED)).to.equal(
+        'true',
+      );
+      wrapper.unmount();
+    });
+
+    it('should not open the account transition modal if it has been previously dismissed', () => {
+      localStorage.setItem(ACCOUNT_TRANSITION_DISMISSED, true);
+      const mutatedProps = {
+        ...props,
+        currentlyLoggedIn: true,
+        user: {
+          mhvTransitionComplete: false,
+        },
+        signInServiceName: 'mhv',
+      };
+      const wrapper = shallow(<Main {...props} />);
+      global.window.simulate('load');
+      wrapper.setProps(mutatedProps);
+      expect(props.toggleAccountTransitionModal.notCalled).to.be.true;
+      wrapper.unmount();
+    });
+  });
+
+  it('should open the `TransitionSuccessModal` when `mhvTransitionComplete` is true and `signIn.serviceName` is `logingov`', () => {
+    const mutatedProps = {
+      ...props,
+      currentlyLoggedIn: true,
+      user: { mhvTransitionComplete: true },
+      signInServiceName: 'logingov',
+    };
+    const wrapper = shallow(<Main {...props} />);
+    global.window.simulate('load');
+    wrapper.setProps(mutatedProps);
+    expect(props.toggleAccountTransitionSuccessModal.calledWith(true)).to.be
+      .true;
+    wrapper.unmount();
   });
 
   it('should ignore any storage changes if the user is already logged out', () => {
@@ -158,6 +256,30 @@ describe('<Main>', () => {
     expect(props.getBackendStatuses.calledOnce).to.be.true;
     expect(props.toggleLoginModal.calledOnce).to.be.true;
     expect(props.toggleLoginModal.calledWith(true, 'header')).to.be.true;
+    wrapper.unmount();
+  });
+
+  it('should append ?next=loginModal when the login modal is opened', () => {
+    const wrapper = shallow(<Main {...props} />);
+    wrapper.find('SearchHelpSignIn').prop('onSignInSignUp')();
+    expect(props.getBackendStatuses.calledOnce).to.be.true;
+    expect(props.toggleLoginModal.calledOnce).to.be.true;
+    expect(props.toggleLoginModal.calledWith(true, 'header')).to.be.true;
+    expect(appendSpy.calledWith()).to.be.true;
+    expect(appendSpy.returnValues[0].next).to.equal('loginModal');
+
+    wrapper.unmount();
+  });
+
+  it('should not append ?next=loginModal when the login modal is opened and a ?next parameter already exists', () => {
+    global.window.location.search = { next: 'account' };
+    const wrapper = shallow(<Main {...props} />);
+    wrapper.find('SearchHelpSignIn').prop('onSignInSignUp')();
+    expect(props.getBackendStatuses.calledOnce).to.be.true;
+    expect(props.toggleLoginModal.calledOnce).to.be.true;
+    expect(props.toggleLoginModal.calledWith(true, 'header')).to.be.true;
+    expect(appendSpy.calledWith()).to.be.true;
+    expect(appendSpy.returnValues[0]).to.be.null;
     wrapper.unmount();
   });
 

@@ -7,12 +7,11 @@
         "address": {
           "addressLine1": "123 Main St",
           "addressLine2": "Suite #1200",
-          "addressLine3": "Box 4",
+          "addressLine3": "Box 456789",
           "city": "New York",
           "countryName": "United States",
           "stateCode": "NY",
-          "zipCode5": "30012",
-          "internationalPostalCode": "1"
+          "zipCode5": "30012"
         },
         "phone": {
           "countryCode": "6",
@@ -24,7 +23,7 @@
       },
       "boardReviewOption": "evidence_submission",
       "timezone": "America/Los_Angeles",
-      "socOptIn": true
+      "socOptIn": false
     }
   },
   "included": [
@@ -54,7 +53,7 @@
       "attributes": {
         "issue": "right shoulder",
         "decisionDate": "2021-06-06",
-        "disagreementArea": "disability evaluation,this is another other entry"
+        "disagreementArea": "disability evaluation,this is another's other entry"
       }
     }
   ],

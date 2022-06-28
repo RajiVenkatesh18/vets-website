@@ -4,6 +4,20 @@ import { connect } from 'react-redux';
 import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom';
 import { LastLocationProvider } from 'react-router-last-location';
 
+import {
+  fetchMilitaryInformation as fetchMilitaryInformationAction,
+  fetchHero as fetchHeroAction,
+  fetchPersonalInformation as fetchPersonalInformationAction,
+} from '@@profile/actions';
+import {
+  cnpDirectDepositInformation,
+  showProfileLGBTQEnhancements,
+} from '@@profile/selectors';
+import {
+  fetchCNPPaymentInformation as fetchCNPPaymentInformationAction,
+  fetchEDUPaymentInformation as fetchEDUPaymentInformationAction,
+} from '@@profile/actions/paymentInformation';
+import { CSP_IDS } from 'platform/user/authentication/constants';
 import DowntimeNotification, {
   externalServices,
   externalServiceStatus,
@@ -29,23 +43,6 @@ import {
 } from '~/platform/user/selectors';
 import { signInServiceName as signInServiceNameSelector } from '~/platform/user/authentication/selectors';
 import { fetchMHVAccount as fetchMHVAccountAction } from '~/platform/user/profile/actions';
-import {
-  fetchMilitaryInformation as fetchMilitaryInformationAction,
-  fetchHero as fetchHeroAction,
-  fetchPersonalInformation as fetchPersonalInformationAction,
-} from '@@profile/actions';
-import {
-  cnpDirectDepositAddressIsSetUp,
-  cnpDirectDepositInformation,
-  cnpDirectDepositIsBlocked,
-  cnpDirectDepositIsSetUp,
-  eduDirectDepositIsSetUp,
-  showProfileLGBTQEnhancements,
-} from '@@profile/selectors';
-import {
-  fetchCNPPaymentInformation as fetchCNPPaymentInformationAction,
-  fetchEDUPaymentInformation as fetchEDUPaymentInformationAction,
-} from '@@profile/actions/paymentInformation';
 
 import { fetchTotalDisabilityRating as fetchTotalDisabilityRatingAction } from '~/applications/personalization/rated-disabilities/actions';
 
@@ -155,14 +152,11 @@ class Profile extends Component {
   // content to show after data has loaded
   mainContent = () => {
     const routesOptions = {
-      removeDirectDeposit: !this.props.shouldShowDirectDeposit,
       shouldShowProfileLGBTQEnhancements: this.props
         .shouldShowProfileLGBTQEnhancements,
     };
-
     // We need to pass in a config to hide forbidden routes
     const routes = getRoutes(routesOptions);
-
     return (
       <BrowserRouter>
         <LastLocationProvider>
@@ -253,31 +247,30 @@ class Profile extends Component {
 }
 
 Profile.propTypes = {
-  user: PropTypes.object.isRequired,
-  showLoader: PropTypes.bool.isRequired,
-  isInMVI: PropTypes.bool.isRequired,
-  isLOA3: PropTypes.bool.isRequired,
-  shouldFetchCNPDirectDepositInformation: PropTypes.bool.isRequired,
-  shouldShowDirectDeposit: PropTypes.bool.isRequired,
+  fetchCNPPaymentInformation: PropTypes.func.isRequired,
+  fetchEDUPaymentInformation: PropTypes.func.isRequired,
   fetchFullName: PropTypes.func.isRequired,
   fetchMHVAccount: PropTypes.func.isRequired,
   fetchMilitaryInformation: PropTypes.func.isRequired,
   fetchPersonalInformation: PropTypes.func.isRequired,
-  fetchCNPPaymentInformation: PropTypes.func.isRequired,
-  fetchEDUPaymentInformation: PropTypes.func.isRequired,
+  isInMVI: PropTypes.bool.isRequired,
+  isLOA3: PropTypes.bool.isRequired,
+  shouldFetchCNPDirectDepositInformation: PropTypes.bool.isRequired,
+  shouldShowDirectDeposit: PropTypes.bool.isRequired,
   shouldShowProfileLGBTQEnhancements: PropTypes.bool.isRequired,
+  showLoader: PropTypes.bool.isRequired,
+  user: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = state => {
-  const signInServicesEligibleForDD = new Set(['idme', 'logingov']);
+  const signInServicesEligibleForDD = new Set([
+    CSP_IDS.ID_ME,
+    CSP_IDS.LOGIN_GOV,
+  ]);
   const isEvssAvailableSelector = createIsServiceAvailableSelector(
     backendServices.EVSS_CLAIMS,
   );
   const isEvssAvailable = isEvssAvailableSelector(state);
-  const isCNPDirectDepositSetUp = cnpDirectDepositIsSetUp(state);
-  const isEDUDirectDepositSetUp = eduDirectDepositIsSetUp(state);
-  const isCNPDirectDepositBlocked = cnpDirectDepositIsBlocked(state);
-  const isEligibleToSetUpCNP = cnpDirectDepositAddressIsSetUp(state);
   const is2faEnabled = isMultifactorEnabled(state);
   const signInService = signInServiceNameSelector(state);
   const isInMVI = isInMVISelector(state);
@@ -337,18 +330,6 @@ const mapStateToProps = state => {
   const showLoader =
     !hasLoadedAllData || (!isLOA3 && !isLOA1 && currentlyLoggedIn);
 
-  const shouldShowDirectDeposit = () => {
-    // if they are explicitly blocked from DD4CNP, do not show it
-    if (isCNPDirectDepositBlocked) return false;
-    return (
-      (isLOA3 && !is2faEnabled) || // we _want_ to show the DD section to non-2FA users
-      (isLOA3 && !signInServicesEligibleForDD.has(signInService)) || // we _want_ to show the DD section to users who did not sign in with ID.me
-      isCNPDirectDepositSetUp ||
-      isEligibleToSetUpCNP ||
-      isEDUDirectDepositSetUp
-    );
-  };
-
   return {
     user: state.user,
     showLoader,
@@ -357,7 +338,6 @@ const mapStateToProps = state => {
     shouldFetchCNPDirectDepositInformation,
     shouldFetchEDUDirectDepositInformation,
     shouldFetchTotalDisabilityRating,
-    shouldShowDirectDeposit: shouldShowDirectDeposit(),
     isDowntimeWarningDismissed: state.scheduledDowntime?.dismissedDowntimeWarnings?.includes(
       'profile',
     ),

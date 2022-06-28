@@ -1,60 +1,77 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { uniqBy } from 'lodash';
 import Breadcrumbs from '@department-of-veterans-affairs/component-library/Breadcrumbs';
-import FacilityContacts from '../components/FacilityContacts';
+import scrollToTop from 'platform/utilities/ui/scrollToTop';
 import Balances from '../components/Balances';
 import BalanceQuestions from '../components/BalanceQuestions';
-import scrollToTop from 'platform/utilities/ui/scrollToTop';
-import Alert from '../components/Alerts';
-import { sortStatementsByDate, rmvDupFacilities } from '../utils/helpers';
+import { sortStatementsByDate, cdpAccessToggle } from '../utils/helpers';
+import OtherVADebts from '../components/OtherVADebts';
+import {
+  ALERT_TYPES,
+  APP_TYPES,
+  API_RESPONSES,
+} from '../../combined-debt-portal/combined/utils/helpers';
+import alertMessage from '../../combined-debt-portal/combined/utils/alert-messages';
+import { fetchDebtResponseAsync } from './MedicalCopaysApp';
 
 const OverviewPage = () => {
-  const statementData = useSelector(({ mcp }) => mcp.statements);
-  const facilities = rmvDupFacilities(statementData);
-  const sortedStatements = sortStatementsByDate(statementData);
-  const statementsByUniqueFacility = uniqBy(sortedStatements, 'pSFacilityNum');
-  const error = useSelector(({ mcp }) => mcp.error);
-  const [alertType, setAlertType] = useState(null);
+  const [hasDebts, setHasDebts] = useState(false);
 
-  useEffect(
-    () => {
-      scrollToTop();
-      setAlertType(null);
-      if (!statementData?.length) {
-        setAlertType('no-history');
-      }
-      if (error) {
-        setAlertType('error');
-      }
-    },
-    [error, statementData],
-  );
+  const showCDPComponents = useSelector(state => cdpAccessToggle(state));
+  const statements = useSelector(({ mcp }) => mcp.statements) ?? [];
+  const sortedStatements = sortStatementsByDate(statements);
+  const statementsByUniqueFacility = uniqBy(sortedStatements, 'pSFacilityNum');
+  const title = 'Current copay balances';
+
+  const renderOtherVA = () => {
+    const alertInfo = alertMessage(ALERT_TYPES.ERROR, APP_TYPES.DEBT);
+    if (hasDebts > 0) {
+      return <OtherVADebts module={APP_TYPES.DEBT} />;
+    }
+    if (hasDebts === API_RESPONSES.ERROR) {
+      return (
+        <>
+          <h3>Your other VA debts</h3>
+          <va-alert
+            data-testid={alertInfo.testID}
+            status={alertInfo.alertStatus}
+          >
+            <h4 slot="headline" className="vads-u-font-size--h3">
+              {alertInfo.header}
+            </h4>
+            {alertInfo.body}
+          </va-alert>
+        </>
+      );
+    }
+    return <></>;
+  };
+
+  useEffect(() => {
+    scrollToTop();
+    fetchDebtResponseAsync().then(hasDebtsResponse =>
+      setHasDebts(hasDebtsResponse),
+    );
+  }, []);
 
   return (
     <>
-      <Breadcrumbs className="vads-u-font-family--sans">
+      <Breadcrumbs className="vads-u-font-family--sans no-wrap">
         <a href="/">Home</a>
         <a href="/health-care">Health care</a>
         <a href="/health-care/pay-copay-bill">Pay your VA copay bill</a>
-        <a href="/health-care/pay-copay-bill/your-current-balances">
-          Your current copay balances
-        </a>
+        <a href="/health-care/pay-copay-bill/your-current-balances">{title}</a>
       </Breadcrumbs>
-      <h1 data-testid="overview-page-title">Your current copay balances</h1>
-      {alertType ? (
-        <Alert type={alertType} error={error} />
-      ) : (
-        <>
-          <p className="vads-u-font-size--lg">
-            Check your VA health care and prescription charges from each of your
-            facilities. Find out how to make payments or request financial help.
-          </p>
-          <Balances statementData={statementsByUniqueFacility} />
-          <BalanceQuestions />
-          <FacilityContacts facilities={facilities} />
-        </>
-      )}
+      <h1 data-testid="overview-page-title">{title}</h1>
+      <p className="vads-u-font-size--lg vads-u-font-family--serif">
+        Check the balance of VA health care and prescription charges from each
+        of your facilities. Find out how to make payments or request financial
+        help.
+      </p>
+      <Balances statements={statementsByUniqueFacility} />
+      {showCDPComponents && renderOtherVA()}
+      <BalanceQuestions />
     </>
   );
 };

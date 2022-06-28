@@ -195,7 +195,7 @@ describe('Mega Menu', () => {
       }
     });
 
-    it('looks as expected authenticated - C12294', () => {
+    it.skip('looks as expected authenticated - C12294', () => {
       // Login as the mock user.
       cy.login(mockUser);
 
@@ -219,7 +219,7 @@ describe('Mega Menu', () => {
       cy.viewport('iphone-4');
     });
 
-    it('looks as expected unauthenticated - C12295', () => {
+    it.skip('looks as expected unauthenticated - C12295', () => {
       // Skip unauthenticated test for app URLs to avoid unexpected behavior.
       if (usingHomepageUrl) {
         // Visit the homepage.
@@ -234,7 +234,7 @@ describe('Mega Menu', () => {
       }
     });
 
-    it('looks as expected authenticated - C12296', () => {
+    it.skip('looks as expected authenticated - C12296', () => {
       // Login as the mock user.
       cy.login(mockUser);
 
@@ -249,7 +249,7 @@ describe('Mega Menu', () => {
       cy.get('[data-e2e-id="my-health-4"]');
     });
 
-    it('traps focus inside mega menu when opened - C12297', () => {
+    it.skip('traps focus inside mega menu when opened - C12297', () => {
       // Skip unauthenticated test for app URLs to avoid unexpected behavior.
       if (usingHomepageUrl) {
         cy.visit(testUrl);

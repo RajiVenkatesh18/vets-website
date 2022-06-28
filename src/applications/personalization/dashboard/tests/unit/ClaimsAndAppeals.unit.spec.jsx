@@ -1,13 +1,12 @@
 import React from 'react';
 import { expect } from 'chai';
 
+import { daysAgo } from '@@profile/tests/helpers';
+import { wait } from '@@profile/tests/unit-test-helpers';
 import { mockFetch } from '~/platform/testing/unit/helpers';
 import { renderInReduxProvider } from '~/platform/testing/unit/react-testing-library-helpers';
 
 import reducers from '~/applications/personalization/dashboard/reducers';
-
-import { daysAgo } from '@@profile/tests/helpers';
-import { wait } from '@@profile/tests/unit-test-helpers';
 
 import ClaimsAndAppeals from '../../components/claims-and-appeals/ClaimsAndAppeals';
 
@@ -142,7 +141,7 @@ describe('ClaimsAndAppeals component', () => {
         it('should not render anything at all', () => {
           expect(view.queryByRole('progressbar', { label: /loading/i })).to.not
             .exist;
-          expect(view.queryByRole('heading', { name: /^claims & appeals$/i }))
+          expect(view.queryByRole('heading', { name: /^claims and appeals$/i }))
             .to.not.exist;
         });
       },
@@ -189,9 +188,8 @@ describe('ClaimsAndAppeals component', () => {
           ).to.be.false;
         });
         it('should render a loading spinner but no section headline while loading data', async () => {
-          expect(await view.findByRole('progressbar', { label: /loading/i })).to
-            .exist;
-          expect(view.queryByRole('heading', { name: /^claims & appeals$/i }))
+          expect(view.findByLabelText(/loading/i)).to.exist;
+          expect(view.queryByRole('heading', { name: /^claims and appeals$/i }))
             .to.not.exist;
         });
       },
@@ -238,9 +236,8 @@ describe('ClaimsAndAppeals component', () => {
           ).to.be.true;
         });
         it('should render a loading spinner but no section headline while loading data', async () => {
-          expect(await view.findByRole('progressbar', { label: /loading/i })).to
-            .exist;
-          expect(view.queryByRole('heading', { name: /^claims & appeals$/i }))
+          expect(view.findByLabelText(/loading/i)).to.exist;
+          expect(view.queryByRole('heading', { name: /^claims and appeals$/i }))
             .to.not.exist;
         });
       },
@@ -279,9 +276,8 @@ describe('ClaimsAndAppeals component', () => {
           ).to.be.true;
         });
         it('should render a loading spinner but no section headline while loading data', async () => {
-          expect(await view.findByRole('progressbar', { label: /loading/i })).to
-            .exist;
-          expect(view.queryByRole('heading', { name: /^claims & appeals$/i }))
+          expect(view.findByLabelText(/loading/i)).to.exist;
+          expect(view.queryByRole('heading', { name: /^claims and appeals$/i }))
             .to.not.exist;
         });
       },
@@ -312,8 +308,8 @@ describe('ClaimsAndAppeals component', () => {
       });
       it('should render an error alert', () => {
         expect(view.queryByRole('progressbar')).to.not.exist;
-        expect(view.queryByRole('heading', { name: /^claims & appeals$/i })).to
-          .not.exist;
+        expect(view.queryByRole('heading', { name: /^claims and appeals$/i }))
+          .to.not.exist;
         loadingErrorAlertExists(view);
       });
       it('should not show a CTA', () => {
@@ -349,8 +345,8 @@ describe('ClaimsAndAppeals component', () => {
       });
       it('should render an error alert', () => {
         expect(view.queryByRole('progressbar')).to.not.exist;
-        expect(view.queryByRole('heading', { name: /^claims & appeals$/i })).to
-          .not.exist;
+        expect(view.queryByRole('heading', { name: /^claims and appeals$/i }))
+          .to.not.exist;
         loadingErrorAlertExists(view);
       });
       it('should not show a CTA', () => {
@@ -386,8 +382,8 @@ describe('ClaimsAndAppeals component', () => {
       });
       it('does not render anything, even a headline', () => {
         expect(view.queryByRole('progressbar')).to.not.exist;
-        expect(view.queryByRole('heading', { name: /^claims & appeals$/i })).to
-          .not.exist;
+        expect(view.queryByRole('heading', { name: /^claims and appeals$/i }))
+          .to.not.exist;
       });
     });
     context(
@@ -424,8 +420,8 @@ describe('ClaimsAndAppeals component', () => {
         });
         it('shows the CTA', () => {
           expect(view.queryByRole('progressbar')).to.not.exist;
-          expect(view.getByRole('heading', { name: /^claims & appeals$/i })).to
-            .exist;
+          expect(view.getByRole('heading', { name: /^claims and appeals$/i }))
+            .to.exist;
           expect(
             view.getByRole('link', {
               name: /check your claim or appeal status/i,
@@ -475,8 +471,8 @@ describe('ClaimsAndAppeals component', () => {
         });
         it('shows the CTA', () => {
           expect(view.queryByRole('progressbar')).to.not.exist;
-          expect(view.getByRole('heading', { name: /^claims & appeals$/i })).to
-            .exist;
+          expect(view.getByRole('heading', { name: /^claims and appeals$/i }))
+            .to.exist;
           expect(
             view.getByRole('link', {
               name: /check your claim or appeal status/i,
@@ -526,8 +522,8 @@ describe('ClaimsAndAppeals component', () => {
         });
         it('shows the CTA', () => {
           expect(view.queryByRole('progressbar')).to.not.exist;
-          expect(view.getByRole('heading', { name: /^claims & appeals$/i })).to
-            .exist;
+          expect(view.getByRole('heading', { name: /^claims and appeals$/i }))
+            .to.exist;
           expect(
             view.getByRole('link', {
               name: /check your claim or appeal status/i,
@@ -613,8 +609,8 @@ describe('ClaimsAndAppeals component', () => {
           );
         });
         it('shows the CTA', () => {
-          expect(view.getByRole('heading', { name: /^claims & appeals$/i })).to
-            .exist;
+          expect(view.getByRole('heading', { name: /^claims and appeals$/i }))
+            .to.exist;
           expect(
             view.getByRole('link', {
               name: /check your claim or appeal status/i,
@@ -670,7 +666,7 @@ describe('ClaimsAndAppeals component', () => {
         });
         it('does not render anything, even a headline', () => {
           expect(view.queryByRole('progressbar')).to.not.exist;
-          expect(view.queryByRole('heading', { name: /^claims & appeals$/i }))
+          expect(view.queryByRole('heading', { name: /^claims and appeals$/i }))
             .to.not.exist;
         });
       },

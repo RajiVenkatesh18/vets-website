@@ -3,13 +3,13 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { debounce } from 'lodash';
 // Relative imports.
+import { langSelectedAction } from 'applications/static-pages/i18Select/actions';
 import CrisisPanel from './CrisisPanel';
 import DesktopLinks from './DesktopLinks';
 import LanguageSupport from './LanguageSupport';
 import MobileLinks from './MobileLinks';
 import { createLinkGroups } from '../helpers';
 import { isWideScreen } from '../../../utilities/accessibility/index';
-import { langSelectedAction } from 'applications/static-pages/i18Select/actions';
 import { replaceWithStagingDomain } from '../../../utilities/environment/stagingDomains';
 
 class Footer extends Component {
@@ -59,12 +59,14 @@ class Footer extends Component {
           )}
 
           <div className="usa-grid usa-grid-full footer-banner">
-            <a href="/" className="va-footer-logo" title="Go to VA.gov">
+            <a href="/" title="Go to VA.gov">
               <img
                 src={replaceWithStagingDomain(
                   'https://www.va.gov/img/homepage/va-logo-white.png',
                 )}
                 alt="VA logo"
+                width="200"
+                className="vads-u-height--auto"
               />
             </a>
           </div>

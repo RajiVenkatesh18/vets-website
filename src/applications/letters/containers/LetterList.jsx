@@ -1,18 +1,19 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
+import PropTypes from 'prop-types';
 
-import CollapsiblePanel from '@department-of-veterans-affairs/component-library/CollapsiblePanel';
+import { focusElement } from 'platform/utilities/ui';
+
 import DownloadLetterLink from '../components/DownloadLetterLink';
 import VeteranBenefitSummaryLetter from './VeteranBenefitSummaryLetter';
 
-import { focusElement } from 'platform/utilities/ui';
 import { letterContent, bslHelpInstructions } from '../utils/helpers';
 import { AVAILABILITY_STATUSES, LETTER_TYPES } from '../utils/constants';
 
 export class LetterList extends React.Component {
   componentDidMount() {
-    focusElement('.nav-header');
+    focusElement('h2#nav-form-header');
   }
 
   render() {
@@ -49,14 +50,12 @@ export class LetterList extends React.Component {
       }
 
       return (
-        <CollapsiblePanel
-          panelName={letterTitle}
-          key={`collapsiblePanel-${index}`}
-        >
+        <va-accordion-item key={`panel-${index}`}>
+          <h3 slot="headline">{letterTitle}</h3>
           <div>{content}</div>
           {conditionalDownloadButton}
           {helpText}
-        </CollapsiblePanel>
+        </va-accordion-item>
       );
     });
 
@@ -66,18 +65,13 @@ export class LetterList extends React.Component {
       AVAILABILITY_STATUSES.letterEligibilityError
     ) {
       eligibilityMessage = (
-        <div className="usa-alert usa-alert-warning">
-          <div className="usa-alert-body">
-            <h4 className="usa-alert-heading">
-              Some letters may not be available
-            </h4>
-            <p className="usa-alert-text">
-              One of our systems appears to be down. If you believe you’re
-              missing a letter or document from the list above, please try again
-              later.
-            </p>
-          </div>
-        </div>
+        <va-alert status="warning" visible>
+          <h4 slot="headline">Some letters may not be available</h4>
+          <p>
+            One of our systems appears to be down. If you believe you’re missing
+            a letter or document from the list above, please try again later.
+          </p>
+        </va-alert>
       );
     }
 
@@ -109,7 +103,7 @@ export class LetterList extends React.Component {
         <p>
           <Link to="confirm-address">Go back to edit address</Link>
         </p>
-        {letterItems}
+        <va-accordion bordered>{letterItems}</va-accordion>
         {eligibilityMessage}
 
         <br />
@@ -131,9 +125,9 @@ export class LetterList extends React.Component {
               </strong>
             </a>
           </li>
-          <li>
+          {/* <li> // COE to be launched on VA.gov soon
             <a
-              href="https://eauth.va.gov/ebenefits/coe"
+              href="/housing-assistance/home-loans/request-coe-form-26-1880"
               rel="noopener noreferrer"
               target="_blank"
             >
@@ -142,16 +136,15 @@ export class LetterList extends React.Component {
                 (COE) for your home loan benefits.
               </strong>
             </a>
-          </li>
+          </li> */}
           <li>
             <a
-              href="https://eauth.va.gov/ebenefits/DPRIS"
+              href="/records/get-military-service-records/"
               rel="noopener noreferrer"
               target="_blank"
             >
               <strong>
-                Sign in to eBenefits to request a copy of your discharge or
-                separation papers (DD 214).
+                Request your military service records (including DD214).
               </strong>
             </a>
           </li>
@@ -179,5 +172,17 @@ function mapStateToProps(state) {
     optionsAvailable: letterState.optionsAvailable,
   };
 }
+
+LetterList.propTypes = {
+  letterDownloadStatus: PropTypes.shape({}),
+  letters: PropTypes.arrayOf(
+    PropTypes.shape({
+      letterType: PropTypes.string,
+      name: PropTypes.string,
+    }),
+  ),
+  lettersAvailability: PropTypes.string,
+  optionsAvailable: PropTypes.bool,
+};
 
 export default connect(mapStateToProps)(LetterList);

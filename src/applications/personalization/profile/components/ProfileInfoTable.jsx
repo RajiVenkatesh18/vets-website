@@ -33,6 +33,12 @@ const TableTitle = ({ namedAnchor, children, level }) => {
   );
 };
 
+TableTitle.propTypes = {
+  children: PropTypes.node,
+  level: numberBetween(1, 6),
+  namedAnchor: PropTypes.string,
+};
+
 const ProfileInfoTable = ({
   data,
   dataTransformer,
@@ -63,6 +69,12 @@ const ProfileInfoTable = ({
     'width--auto',
   ]);
 
+  const tableRowTitleDescriptionClasses = prefixUtilityClasses([
+    'color--gray-medium',
+    'display--block',
+    'font-weight--normal',
+  ]);
+
   const tableRowValueClasses = prefixUtilityClasses([
     'margin--0',
     'width--full',
@@ -76,6 +88,10 @@ const ProfileInfoTable = ({
       ' ',
     ),
     tableRowTitle: tableRowTitleClasses.join(' '),
+    tableRowTitleDescription: [
+      ...tableRowValueClasses,
+      ...tableRowTitleDescriptionClasses,
+    ].join(' '),
     tableRowValue: tableRowValueClasses.join(' '),
   };
 
@@ -86,6 +102,7 @@ const ProfileInfoTable = ({
           {title}
         </TableTitle>
       )}
+
       {/* eslint-disable-next-line jsx-a11y/no-redundant-roles */}
       <ol className="vads-u-margin--0 vads-u-padding--0" role="list">
         {data
@@ -101,7 +118,15 @@ const ProfileInfoTable = ({
               id={row.id}
             >
               {row.title && (
-                <dfn className={classes.tableRowTitle}>{row.title}</dfn>
+                <dfn className={classes.tableRowTitle}>
+                  {row.title}
+                  {row.description && (
+                    <span className={classes.tableRowTitleDescription}>
+                      {row.description}
+                    </span>
+                  )}
+                  {row.alertMessage && <>{row.alertMessage}</>}
+                </dfn>
               )}
 
               {/* In Account Security, we have some rows that need a checkmark when verified  */}
@@ -118,12 +143,12 @@ const ProfileInfoTable = ({
 };
 
 ProfileInfoTable.propTypes = {
-  title: PropTypes.string,
   data: PropTypes.array.isRequired,
-  dataTransformer: PropTypes.func,
   className: PropTypes.string,
-  namedAnchor: PropTypes.string,
+  dataTransformer: PropTypes.func,
   level: numberBetween(1, 6),
+  namedAnchor: PropTypes.string,
+  title: PropTypes.string,
 };
 
 export default ProfileInfoTable;

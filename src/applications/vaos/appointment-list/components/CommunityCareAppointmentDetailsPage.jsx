@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
-import LoadingIndicator from '@department-of-veterans-affairs/component-library/LoadingIndicator';
 
+import PropTypes from 'prop-types';
 import moment from '../../lib/moment-tz';
 
 import { APPOINTMENT_STATUS, FETCH_STATUS } from '../../utils/constants';
@@ -19,11 +19,12 @@ import Breadcrumbs from '../../components/Breadcrumbs';
 import InfoAlert from '../../components/InfoAlert';
 import { getCalendarData } from '../../services/appointment';
 import StatusAlert from './ConfirmedAppointmentDetailsPage/StatusAlert';
+import { getTypeOfCareById } from '../../utils/appointment';
 
 export default function CommunityCareAppointmentDetailsPage() {
   const { id } = useParams();
   const dispatch = useDispatch();
-  const { appointment, appointmentDetailsStatus } = useSelector(state =>
+  const { appointment, appointmentDetailsStatus, useV2 } = useSelector(state =>
     selectCommunityCareDetailsInfo(state, id),
   );
   const appointmentDate = moment.parseZone(appointment?.start);
@@ -70,20 +71,22 @@ export default function CommunityCareAppointmentDetailsPage() {
   if (!appointment || appointmentDetailsStatus === FETCH_STATUS.loading) {
     return (
       <FullWidthLayout>
-        <LoadingIndicator setFocus message="Loading your appointment..." />
+        <va-loading-indicator set-focus message="Loading your appointment..." />
       </FullWidthLayout>
     );
   }
 
   const header = 'Community care';
-  const { name, providerName, practiceName } =
+  const { name, providers, practiceName } =
     appointment.communityCareProvider || {};
   const calendarData = getCalendarData({
     facility: appointment.communityCareProvider,
     appointment,
   });
-  const isPastAppointment = appointment.vaos.isPastAppointment;
+  const { isPastAppointment } = appointment.vaos;
   const isCanceled = appointment.status === APPOINTMENT_STATUS.cancelled;
+  const typeOfCare = getTypeOfCareById(appointment.vaos.apiData.serviceType);
+  const providerName = providers ? providers[0].providerName : null;
 
   return (
     <PageLayout>
@@ -97,6 +100,17 @@ export default function CommunityCareAppointmentDetailsPage() {
 
       <StatusAlert appointment={appointment} />
 
+      {useV2 && (
+        <>
+          <h2
+            className="vads-u-font-size--base vads-u-font-family--sans vads-u-margin-bottom--0"
+            data-cy="community-care-appointment-details-header"
+          >
+            <div className="vads-u-display--inline">Type of care</div>
+          </h2>
+          <div>{typeOfCare?.name}</div>
+        </>
+      )}
       <h2
         className="vads-u-font-size--base vads-u-font-family--sans vads-u-margin-bottom--0"
         data-cy="community-care-appointment-details-header"
@@ -155,21 +169,30 @@ export default function CommunityCareAppointmentDetailsPage() {
           aria-hidden="true"
           className="fas fa-print vads-u-margin-right--1 vads-u-color--link-default"
         />
-        <button className="va-button-link" onClick={() => window.print()}>
+        <button
+          type="button"
+          className="va-button-link"
+          onClick={() => window.print()}
+        >
           Print
         </button>
       </div>
 
-      {!isPastAppointment && (
-        <InfoAlert
-          backgroundOnly
-          headline="Need to make changes?"
-          status="info"
-        >
-          Contact this provider if you need to reschedule or cancel your
-          appointment.
-        </InfoAlert>
-      )}
+      {!isPastAppointment &&
+        appointment.status !== 'cancelled' && (
+          <InfoAlert
+            backgroundOnly
+            headline="Need to make changes?"
+            status="info"
+          >
+            Contact this provider if you need to reschedule or cancel your
+            appointment.
+          </InfoAlert>
+        )}
     </PageLayout>
   );
 }
+
+CommunityCareAppointmentDetailsPage.propTypes = {
+  useV2: PropTypes.bool,
+};

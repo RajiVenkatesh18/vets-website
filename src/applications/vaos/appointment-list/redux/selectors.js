@@ -22,6 +22,8 @@ import {
   selectFeatureRequests,
   selectIsCernerOnlyPatient,
   selectFeatureCancel,
+  selectFeatureVAOSServiceVAAppointments,
+  selectFeatureVAOSServiceCCAppointments,
 } from '../../redux/selectors';
 import { TYPE_OF_CARE_ID as VACCINE_TYPE_OF_CARE_ID } from '../../covid-19-vaccine/utils';
 
@@ -208,6 +210,9 @@ export function selectCanUseVaccineFlow(state) {
 
 export function selectRequestedAppointmentDetails(state, id) {
   const { appointmentDetailsStatus, facilityData } = state.appointments;
+  const featureVAOSServiceCCAppointments = selectFeatureVAOSServiceCCAppointments(
+    state,
+  );
 
   return {
     appointment: selectAppointmentById(state, id, [
@@ -218,6 +223,7 @@ export function selectRequestedAppointmentDetails(state, id) {
     facilityData,
     message: selectFirstRequestMessage(state, id),
     cancelInfo: getCancelInfo(state),
+    useV2: featureVAOSServiceCCAppointments,
   };
 }
 
@@ -253,7 +259,9 @@ export function getUpcomingAppointmentListInfo(state) {
 
 export function getConfirmedAppointmentDetailsInfo(state, id) {
   const { appointmentDetailsStatus, facilityData } = state.appointments;
-
+  const featureVAOSServiceVAAppointments = selectFeatureVAOSServiceVAAppointments(
+    state,
+  );
   return {
     appointment: selectAppointmentById(state, id, [
       APPOINTMENT_TYPES.vaAppointment,
@@ -262,6 +270,7 @@ export function getConfirmedAppointmentDetailsInfo(state, id) {
     cancelInfo: getCancelInfo(state),
     facilityData,
     showCancelButton: selectFeatureCancel(state),
+    useV2: featureVAOSServiceVAAppointments,
   };
 }
 
@@ -277,11 +286,16 @@ export function getPastAppointmentListInfo(state) {
 
 export function selectCommunityCareDetailsInfo(state, id) {
   const { appointmentDetailsStatus, facilityData } = state.appointments;
+  const featureVAOSServiceCCAppointments = selectFeatureVAOSServiceCCAppointments(
+    state,
+  );
+
   return {
     appointment: selectAppointmentById(state, id, [
       APPOINTMENT_TYPES.ccAppointment,
     ]),
     appointmentDetailsStatus,
     facilityData,
+    useV2: featureVAOSServiceCCAppointments,
   };
 }

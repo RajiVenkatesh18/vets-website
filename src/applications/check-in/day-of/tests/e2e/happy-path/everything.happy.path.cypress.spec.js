@@ -1,28 +1,52 @@
-import { generateFeatureToggles } from '../../../api/local-mock-api/mocks/feature.toggles';
-import '../support/commands';
+import '../../../../tests/e2e/commands';
+
+import ApiInitializer from '../../../../api/local-mock-api/e2e/ApiInitializer';
 import ValidateVeteran from '../../../../tests/e2e/pages/ValidateVeteran';
 import Demographics from '../../../../tests/e2e/pages/Demographics';
 import NextOfKin from '../../../../tests/e2e/pages/NextOfKin';
 import EmergencyContact from '../../../../tests/e2e/pages/EmergencyContact';
-import UpdateInformation from '../pages/UpdateInformation';
 import Appointments from '../pages/Appointments';
 import Confirmation from '../pages/Confirmation';
+import checkInData from '../../../../api/local-mock-api/mocks/v2/check-in-data';
 
-describe('Check In Experience -- ', () => {
-  describe('everything path -- ', () => {
-    beforeEach(function() {
-      cy.authenticate();
-      cy.getSingleAppointment();
-      cy.successfulCheckin();
+describe('Check In Experience', () => {
+  describe('everything path', () => {
+    beforeEach(() => {
+      const {
+        initializeFeatureToggle,
+        initializeSessionGet,
+        initializeSessionPost,
+        initializeCheckInDataPost,
+      } = ApiInitializer;
+      initializeFeatureToggle.withAllFeatures();
+      initializeSessionGet.withSuccessfulNewSession();
+      initializeSessionPost.withSuccess();
+      initializeCheckInDataPost.withSuccess();
+
+      const rv1 = checkInData.get.createMultipleAppointments();
+      const earliest = checkInData.get.createAppointment();
+      earliest.startTime = '2021-08-19T03:00:00';
+      const midday = checkInData.get.createAppointment();
+      midday.startTime = '2021-08-19T13:00:00';
+      const latest = checkInData.get.createAppointment();
+      latest.startTime = '2027-08-19T18:00:00';
+      rv1.payload.appointments = [latest, earliest, midday];
+
+      const rv2 = checkInData.get.createMultipleAppointments();
+      const newLatest = checkInData.get.createAppointment();
+      newLatest.startTime = '2027-08-19T17:00:00';
+      rv2.payload.appointments = [newLatest, earliest, midday];
+      const responses = [rv1, rv2];
+
       cy.intercept(
-        'GET',
-        '/v0/feature_toggles*',
-        generateFeatureToggles({
-          checkInExperienceUpdateInformationPageEnabled: true,
-
-          emergencyContactEnabled: true,
-        }),
-      );
+        {
+          method: 'GET',
+          url: '/check_in/v2/patient_check_ins/*',
+        },
+        req => {
+          req.reply(responses.shift());
+        },
+      ).as('testid');
     });
     afterEach(() => {
       cy.window().then(window => {
@@ -31,37 +55,41 @@ describe('Check In Experience -- ', () => {
     });
     it('everything Happy path', () => {
       cy.visitWithUUID();
-      ValidateVeteran.validatePageLoaded('Check in at VA');
-      cy.injectAxe();
-      cy.axeCheck();
+      ValidateVeteran.validatePage.dayOf();
+      cy.injectAxeThenAxeCheck();
+
       ValidateVeteran.validateVeteran();
       ValidateVeteran.attemptToGoToNextPage();
       Demographics.validatePageLoaded();
-      cy.injectAxe();
-      cy.axeCheck();
+      cy.injectAxeThenAxeCheck();
+
       Demographics.attemptToGoToNextPage();
+      EmergencyContact.validatePageLoaded();
+      cy.injectAxeThenAxeCheck();
+
+      EmergencyContact.attemptToGoToNextPage();
+
       NextOfKin.validatePageLoaded(
         'Is this your current next of kin information?',
       );
-      cy.injectAxe();
-      cy.axeCheck();
+      cy.injectAxeThenAxeCheck();
       NextOfKin.attemptToGoToNextPage();
-      EmergencyContact.validatePageLoaded();
-      cy.injectAxe();
-      cy.axeCheck();
-      EmergencyContact.attemptToGoToNextPage();
-      UpdateInformation.validatePageLoaded();
-      cy.injectAxe();
-      cy.axeCheck();
-      UpdateInformation.attemptToGoToNextPage('no');
+
       Appointments.validatePageLoaded();
       Appointments.validateAppointmentLength(3);
-      cy.injectAxe();
-      cy.axeCheck();
+      Appointments.validateAppointmentTime(3, '6:00 p.m.');
+      cy.injectAxeThenAxeCheck();
+
       Appointments.attemptCheckIn(2);
       Confirmation.validatePageLoaded();
-      cy.injectAxe();
-      cy.axeCheck();
+      cy.injectAxeThenAxeCheck();
+
+      Confirmation.attemptGoBackToAppointments();
+      Appointments.validatePageLoaded();
+      Appointments.validateAppointmentLength(3);
+      // Validate that appointments are refreshed.
+      Appointments.validateAppointmentTime(3, '5:00 p.m.');
+      cy.injectAxeThenAxeCheck();
     });
   });
 });

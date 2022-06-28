@@ -8,7 +8,7 @@ import {
   FILE_TYPE_MISMATCH_ERROR,
 } from 'platform/forms-system/src/js/utilities/file';
 
-import { AddFilesForm } from '../../components/AddFilesForm';
+import AddFilesForm from '../../components/AddFilesForm';
 import {
   MAX_FILE_SIZE_BYTES,
   MAX_FILE_SIZE_MB,
@@ -40,8 +40,10 @@ describe('<AddFilesForm>', () => {
       />,
     );
     expect(tree.everySubTree('FileInput')).not.to.be.empty;
+    expect(tree.everySubTree('FileInput')[0].props['aria-describedby']).to.eq(
+      'file-requirements',
+    );
     expect(tree.everySubTree('Modal')[0].props.visible).to.be.false;
-    expect(tree.everySubTree('Modal')[1].props.visible).to.be.false;
   });
 
   it('should show uploading modal', () => {
@@ -70,7 +72,7 @@ describe('<AddFilesForm>', () => {
     expect(tree.everySubTree('Modal')[0].props.visible).to.be.true;
   });
 
-  it('should show mail or fax modal', () => {
+  it('should include mail info additional info', () => {
     const files = [];
     const field = { value: '', dirty: false };
     const onSubmit = sinon.spy();
@@ -82,7 +84,6 @@ describe('<AddFilesForm>', () => {
 
     const tree = SkinDeep.shallowRender(
       <AddFilesForm
-        showMailOrFax
         files={files}
         field={field}
         onSubmit={onSubmit}
@@ -93,7 +94,7 @@ describe('<AddFilesForm>', () => {
         onDirtyFields={onDirtyFields}
       />,
     );
-    expect(tree.everySubTree('Modal')[1].props.visible).to.be.true;
+    expect(tree.everySubTree('va-additional-info')[0]).to.exist;
   });
 
   it('should not submit if files empty', () => {
@@ -278,7 +279,6 @@ describe('<AddFilesForm>', () => {
         onFieldChange={onFieldChange}
         onCancel={onCancel}
         onDirtyFields={onDirtyFields}
-        pdfSizeFeature
       />,
     );
     tree.getMountedInstance().add([
@@ -331,6 +331,44 @@ describe('<AddFilesForm>', () => {
     expect(tree.getMountedInstance().state.errorMessage).to.be.null;
   });
 
+  it('should add a valid file text file of valid size', () => {
+    const files = [];
+    const field = { value: '', dirty: false };
+    const onSubmit = sinon.spy();
+    const onAddFile = sinon.spy();
+    const onRemoveFile = sinon.spy();
+    const onFieldChange = sinon.spy();
+    const onCancel = sinon.spy();
+    const onDirtyFields = sinon.spy();
+    const mockReadAndCheckFile = () => ({
+      checkIsEncryptedPdf: false,
+      checkTypeAndExtensionMatches: true,
+    });
+
+    const tree = SkinDeep.shallowRender(
+      <AddFilesForm
+        files={files}
+        field={field}
+        onSubmit={onSubmit}
+        onAddFile={onAddFile}
+        onRemoveFile={onRemoveFile}
+        onFieldChange={onFieldChange}
+        onCancel={onCancel}
+        onDirtyFields={onDirtyFields}
+        mockReadAndCheckFile={mockReadAndCheckFile}
+      />,
+    );
+    tree.getMountedInstance().add([
+      {
+        name: 'valid.txt',
+        type: fileTypeSignatures.txt.mime,
+        size: 95,
+      },
+    ]);
+    expect(onAddFile.called).to.be.true;
+    expect(tree.getMountedInstance().state.errorMessage).to.be.null;
+  });
+
   it('should add a large PDF file', () => {
     const files = [];
     const field = { value: '', dirty: false };
@@ -360,7 +398,6 @@ describe('<AddFilesForm>', () => {
         onCancel={onCancel}
         onDirtyFields={onDirtyFields}
         mockReadAndCheckFile={mockReadAndCheckFile}
-        pdfSizeFeature
       />,
     );
     tree.getMountedInstance().add([
@@ -403,7 +440,6 @@ describe('<AddFilesForm>', () => {
         onCancel={onCancel}
         onDirtyFields={onDirtyFields}
         mockReadAndCheckFile={mockReadAndCheckFile}
-        pdfSizeFeature
       />,
     );
     tree.getMountedInstance().add([
@@ -484,7 +520,6 @@ describe('<AddFilesForm>', () => {
         onFieldChange={onFieldChange}
         onCancel={onCancel}
         onDirtyFields={onDirtyFields}
-        requestLockedPdfPassword
       />,
     );
     expect(tree.getMountedInstance().state.errorMessage).to.be.null;

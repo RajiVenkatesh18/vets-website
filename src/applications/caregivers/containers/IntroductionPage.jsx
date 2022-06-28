@@ -1,11 +1,9 @@
 import React, { useCallback, useEffect } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import OMBInfo from '@department-of-veterans-affairs/component-library/OMBInfo';
-import Telephone, {
-  CONTACTS,
-} from '@department-of-veterans-affairs/component-library/Telephone';
 
+import { CONTACTS } from '@department-of-veterans-affairs/component-library/contacts';
+import OMBInfo from '@department-of-veterans-affairs/component-library/OMBInfo';
 import FormTitle from 'platform/forms-system/src/js/components/FormTitle';
 import recordEvent from 'platform/monitoring/record-event';
 import { focusElement } from 'platform/utilities/ui';
@@ -19,8 +17,6 @@ import {
   DowntimeNotification,
   externalServices,
 } from 'platform/monitoring/DowntimeNotification';
-import FEATURE_FLAG_NAMES from 'platform/utilities/feature-toggles/featureFlagNames';
-import { toggleValues } from 'platform/site-wide/feature-toggles/selectors';
 import { setData } from 'platform/forms-system/src/js/actions';
 
 export const IntroductionPage = ({
@@ -28,34 +24,33 @@ export const IntroductionPage = ({
   router,
   formData,
   setFormData,
+  canAutofill1010cgAddress,
   canUpload1010cgPOA,
 }) => {
   useEffect(() => {
     focusElement('.va-nav-breadcrumbs-list');
   }, []);
 
-  const getFeatureFlip = useCallback(
+  useEffect(
     () => {
       setFormData({
         ...formData,
         'view:canUpload1010cgPOA': canUpload1010cgPOA,
+        'view:canAutofill1010cgAddress': canAutofill1010cgAddress,
       });
     },
-    [setFormData, canUpload1010cgPOA],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [setFormData, canAutofill1010cgAddress, canUpload1010cgPOA],
   );
 
-  useEffect(
+  const startForm = useCallback(
     () => {
-      getFeatureFlip();
+      recordEvent({ event: 'caregivers-10-10cg-start-form' });
+      const { pageList } = route;
+      return router.push(pageList[1].path);
     },
-    [getFeatureFlip],
+    [route, router],
   );
-
-  const startForm = () => {
-    recordEvent({ event: 'caregivers-10-10cg-start-form' });
-    const pageList = route.pageList;
-    return router.push(pageList[1].path);
-  };
 
   const ProcessTimeline = () => (
     <div>
@@ -75,53 +70,55 @@ export const IntroductionPage = ({
               You’ll need:
             </p>
 
-            <ul className="process-lists">
-              <li>
-                The address, telephone number, and date of birth for the Veteran
-                and each family caregiver applicant
-              </li>
-              <li>The VA medical center where the Veteran will receive care</li>
-              <li>
-                Health insurance information for the Primary Family Caregiver
-              </li>
-
-              <li className="call-to-action-bullet">
-                The Veteran’s Social Security number or tax identification
-                number (This is required for the online application only.) If
-                you’d like to apply without providing this information, you can
-                download the paper form
-                <p className="vads-u-margin-top--2">
-                  <a
-                    href="https://www.va.gov/vaforms/medical/pdf/10-10CG.pdf"
-                    download="10-10CG.pdf"
-                    type="application/pdf"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <i
-                      aria-hidden="true"
-                      className="fas fa-download vads-u-padding-right--1"
-                      role="img"
-                    />
-                    Download VA form 10-10CG
-                    <dfn className="vads-u-margin-left--0p5">
-                      <abbr title="Portable Document Format">(PDF)</abbr> (934
-                      <abbr title="Kilobytes">KB</abbr>)
-                    </dfn>
-                  </a>
+            <div>
+              <ul className="process-lists">
+                <li>
+                  The address, telephone number, and date of birth for the
+                  Veteran and each family caregiver applicant
+                </li>
+                <li>
+                  The VA medical center where the Veteran will receive care
+                </li>
+                <li>
+                  Health insurance information for the Primary Family Caregiver
+                </li>
+                <li>
+                  Veteran’s Social Security number (SSN) or tax identification
+                  number (TIN)
+                </li>
+              </ul>
+              <div className="vads-u-margin-top--2 vads-u-margin-bottom--5">
+                <va-additional-info trigger="What if I don't want to put my SSN or TIN in the application?">
+                  <div className="vads-u-padding-y--0p25">
+                    <p>
+                      We only require your SSN or TIN if you apply online. If
+                      you want to apply without putting this information in your
+                      application, you can apply by mail or in person.
+                    </p>
+                    <p>
+                      <a href="/family-member-benefits/comprehensive-assistance-for-family-caregivers/#how-do-i-apply-for-this-progra">
+                        Get instructions for how to apply for the PCAFC program
+                        by mail or in person
+                      </a>
+                    </p>
+                  </div>
+                </va-additional-info>
+              </div>
+              {canUpload1010cgPOA && (
+                <p
+                  data-testid="poa-info-note"
+                  className="vads-u-margin-bottom--4"
+                >
+                  {' '}
+                  <strong>Note:</strong> If you’re a legal representative who
+                  can make medical decisions for the Veteran, you can sign this
+                  application for them. You’ll need to upload proof of your
+                  legal authority to make medical decisions for the Veteran.
+                  This type of document is sometimes called a medical proxy or
+                  medical power of attorney.
                 </p>
-              </li>
-            </ul>
-
-            {canUpload1010cgPOA && (
-              <p data-testid="poa-info-note">
-                <strong>Note:</strong> A legal representative, or someone with
-                power of attorney, can fill out this application on behalf of
-                the Veteran. They’ll need to sign the application. They’ll also
-                have a chance to submit documentation to show their status as a
-                legal representative.
-              </p>
-            )}
+              )}
+            </div>
 
             <div>
               <h4 className="vads-u-font-size--h6">
@@ -135,31 +132,26 @@ export const IntroductionPage = ({
 
               <ul className="process-lists">
                 <li>
-                  Call us at
-                  <Telephone
+                  Call us at{' '}
+                  <va-telephone
                     contact={CONTACTS.HEALTHCARE_ELIGIBILITY_CENTER}
-                    className="vads-u-margin-x--0p5"
-                  />
+                  />{' '}
                   and ask for help filling out the form
                 </li>
                 <li>
-                  Use the online
+                  Use the online{' '}
                   <a
                     href={links.caregiverSupportCoordinators.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="vads-u-margin-x--0p5"
                   >
                     Caregiver Support Coordinator locator
-                  </a>
+                  </a>{' '}
                   to find a coordinator at your nearest VA health care facility
                 </li>
                 <li>
-                  Contact the VA National Caregiver Support Line by calling
-                  <Telephone
-                    className="vads-u-margin-x--0p5"
-                    contact={CONTACTS.CAREGIVER}
-                  />
+                  Contact the VA National Caregiver Support Line by calling{' '}
+                  <va-telephone contact={CONTACTS.CAREGIVER} />
                 </li>
               </ul>
 
@@ -187,15 +179,14 @@ export const IntroductionPage = ({
             <p>
               <strong>Note:</strong> If the Veteran isn’t enrolled in VA health
               care or is currently on active duty with a medical discharge,
-              they’ll need to fill out an
+              they’ll need to fill out an{' '}
               <a
                 rel="noopener noreferrer"
                 target="_blank"
                 href={links.applyVAHealthCare.link}
-                className="vads-u-margin-x--0p5"
               >
                 {links.applyVAHealthCare.label}
-              </a>
+              </a>{' '}
               (VA Form 10-10EZ).
             </p>
           </li>
@@ -219,17 +210,12 @@ export const IntroductionPage = ({
             <p>
               You may also be eligible for the Program of General Caregiver
               Support Services (PGCSS). To find out more, call the VA Caregiver
-              Support Line at
-              <Telephone
-                contact={CONTACTS.CAREGIVER}
-                className="vads-u-margin-left--0p5"
-              />
-              , visit
+              Support Line at <va-telephone contact={CONTACTS.CAREGIVER} />,
+              visit{' '}
               <a
                 target="_blank"
                 rel="noopener noreferrer"
                 href={links.caregiverHelpPage.link}
-                className="vads-u-margin-left--0p5"
               >
                 {links.caregiverHelpPage.label}
               </a>
@@ -262,13 +248,21 @@ export const IntroductionPage = ({
           health and wellness of Veterans.
         </p>
 
-        <a className="vads-c-action-link--green" href="#" onClick={startForm}>
+        <a
+          className="vads-c-action-link--green"
+          href="#start"
+          onClick={startForm}
+        >
           Start your application
         </a>
 
         <ProcessTimeline />
 
-        <a className="vads-c-action-link--green" href="#" onClick={startForm}>
+        <a
+          className="vads-c-action-link--green"
+          href="#start"
+          onClick={startForm}
+        >
           Start your application
         </a>
 
@@ -284,9 +278,8 @@ export const IntroductionPage = ({
 
 const mapStateToProps = state => ({
   formData: state.form.data,
-  canUpload1010cgPOA: toggleValues(state)[
-    FEATURE_FLAG_NAMES.canUpload1010cgPOA
-  ],
+  canAutofill1010cgAddress: state.featureToggles?.canAutofill1010cgAddress,
+  canUpload1010cgPOA: state.featureToggles?.canUpload1010cgPOA,
 });
 
 const mapDispatchToProps = {
@@ -294,9 +287,12 @@ const mapDispatchToProps = {
 };
 
 IntroductionPage.propTypes = {
+  canAutofill1010cgAddress: PropTypes.bool,
   canUpload1010cgPOA: PropTypes.bool,
-  setFormData: PropTypes.func,
   formData: PropTypes.object,
+  route: PropTypes.object,
+  router: PropTypes.object,
+  setFormData: PropTypes.func,
 };
 
 const introPageWithRouter = withRouter(IntroductionPage);

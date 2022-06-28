@@ -146,7 +146,9 @@ export default class ReviewCardField extends React.Component {
       this.props.uiSchema,
     );
 
-    const { volatileData, editTitle } = this.props.uiSchema['ui:options'];
+    const { volatileData, editTitle, ariaLabel } = this.props.uiSchema[
+      'ui:options'
+    ];
     const title = editTitle || this.getTitle();
     const subtitle = this.getSubtitle();
     const titleClasses = [
@@ -205,13 +207,19 @@ export default class ReviewCardField extends React.Component {
     return (
       <div className="review-card">
         <div className="review-card--body input-section va-growable-background">
-          <Tag className={titleClasses}>{title}</Tag>
+          <Tag tabIndex={0} className={titleClasses}>
+            {title}
+          </Tag>
           {subtitle && <div className="review-card--subtitle">{subtitle}</div>}
           {needsDlWrapper ? <dl className="review">{Field}</dl> : Field}
           <div className="vads-u-display--flex vads-u-flex-direction--row vads-u-margin-top--2p5">
             {!formContext.reviewMode && (
               <>
-                <button className={updateButtonClasses} onClick={this.update}>
+                <button
+                  className={updateButtonClasses}
+                  onClick={this.update}
+                  aria-label={`${ariaLabel || 'Save Changes'}`}
+                >
                   Save
                 </button>
                 {((volatileData && this.state.canCancel) || !volatileData) && (
@@ -219,6 +227,7 @@ export default class ReviewCardField extends React.Component {
                     className={cancelButtonClasses}
                     style={{ boxShadow: 'none' }}
                     onClick={this.cancelUpdate}
+                    aria-label="Cancel Changes"
                   >
                     Cancel
                   </button>
@@ -238,7 +247,8 @@ export default class ReviewCardField extends React.Component {
       if (dataType === 'object') {
         const { ObjectField } = this.props.registry.fields;
         return <ObjectField {...this.props} />;
-      } else if (dataType === 'array') {
+      }
+      if (dataType === 'array') {
         const { ArrayField } = this.props.registry.fields;
         return <ArrayField {...this.props} />;
       }
@@ -295,7 +305,9 @@ export default class ReviewCardField extends React.Component {
     return (
       <div className="review-card">
         <div className={headerClasses} style={{ minHeight: '5rem' }}>
-          <Tag className={titleClasses}>{title}</Tag>
+          <Tag tabIndex={0} className={titleClasses}>
+            {title}
+          </Tag>
           {!volatileData && (
             <button
               className={`usa-button-secondary ${editButton}`}
@@ -331,9 +343,12 @@ export default class ReviewCardField extends React.Component {
     //  have the option to cancel later
     if (this.props.uiSchema['ui:options']?.volatileData) {
       newState.oldData = this.props.formData;
-      this.resetFormData();
+      this.resetFormData(newState.oldData);
     }
 
+    setTimeout(() => {
+      this.setFocusToHeading();
+    }, 1);
     this.setState(newState);
   };
 
@@ -345,6 +360,8 @@ export default class ReviewCardField extends React.Component {
     }
     this.props.onChange(this.state.oldData);
     this.setState({ editing: false });
+
+    this.setFocusToHeading();
   };
 
   /**
@@ -391,10 +408,20 @@ export default class ReviewCardField extends React.Component {
         canCancel: true,
         oldData: this.props.formData,
       });
+
       if (this.props.uiSchema.saveClickTrackEvent) {
         recordEvent(this.props.uiSchema.saveClickTrackEvent);
       }
+
+      this.setFocusToHeading();
     }
+  };
+
+  // Sets focus on the heading if it exists
+  setFocusToHeading = () => {
+    const reviewCardHeading = document.querySelector('.review-card--title');
+
+    if (reviewCardHeading) reviewCardHeading.focus();
   };
 
   render() {

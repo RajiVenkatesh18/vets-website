@@ -1,16 +1,19 @@
-import React, { useEffect } from 'react';
-import { bindActionCreators } from 'redux';
+import React, { useCallback, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import moment from 'moment';
-import { connect } from 'react-redux';
+import { useSelector, connect } from 'react-redux';
 import Scroll from 'react-scroll';
-
 import environment from 'platform/utilities/environment';
-import GetFormHelp from '../components/GetFormHelp';
 import { focusElement } from 'platform/utilities/ui';
-import { deductionCodes } from '../../debt-letters/const/deduction-codes/';
-import { downloadPDF } from '../actions';
+import ServiceProvidersText, {
+  ServiceProvidersTextCreateAcct,
+} from 'platform/user/authentication/components/ServiceProvidersText';
+import GetFormHelp from '../components/GetFormHelp';
+import { deductionCodes } from '../../debt-letters/const/deduction-codes';
+import DownloadFormPDF from '../components/DownloadFormPDF';
+import { fsrConfirmationEmailToggle } from '../utils/helpers';
 
-const scroller = Scroll.scroller;
+const { scroller } = Scroll;
 const scrollToTop = () => {
   scroller.scrollTo('topScrollElement', {
     duration: 500,
@@ -21,6 +24,9 @@ const scrollToTop = () => {
 
 const RequestDetailsCard = ({ data, response }) => {
   const name = data.personalData?.veteranFullName;
+  const windowPrint = useCallback(() => {
+    window.print();
+  }, []);
 
   return (
     <div className="inset">
@@ -58,9 +64,11 @@ const RequestDetailsCard = ({ data, response }) => {
         <p className="vads-u-margin-y--0">P.O. Box 11930</p>
         <p className="vads-u-margin-y--0">St. Paul, MN 55111-0930</p>
         <p>
+          <DownloadFormPDF />
           <button
             className="usa-button-secondary button vads-u-background-color--white"
-            onClick={() => window.print()}
+            onClick={windowPrint}
+            type="button"
           >
             Print this page
           </button>
@@ -70,7 +78,15 @@ const RequestDetailsCard = ({ data, response }) => {
   );
 };
 
+RequestDetailsCard.propTypes = {
+  data: PropTypes.object,
+  download: PropTypes.func,
+  response: PropTypes.object,
+};
+
 const ConfirmationPage = ({ form, download }) => {
+  const showFSREmail = useSelector(state => fsrConfirmationEmailToggle(state));
+
   const { response } = form.submission;
   const { data } = form;
 
@@ -85,7 +101,18 @@ const ConfirmationPage = ({ form, download }) => {
         <strong>Please print this page for your records.</strong>
       </p>
 
-      <h3 className="confirmation-page-title">We’ve received your request</h3>
+      {showFSREmail && (
+        <va-alert status="success">
+          <h3 className="confirmation-page-title">
+            We’ve received your request
+          </h3>
+          <p>
+            We’ll send you an email confirming your request to{' '}
+            <strong>{data.personalData.emailAddress}.</strong>
+          </p>
+        </va-alert>
+      )}
+
       <p>
         We’ll send you a letter with our decision and any next steps. If you
         experience changes that may affect our decision (like a job loss or a
@@ -106,8 +133,8 @@ const ConfirmationPage = ({ form, download }) => {
           <li className="process-step list-one">
             <h4>Sign in to VA.gov</h4>
             <p>
-              You can sign in with your DS Logon, My HealthyVet, or ID.me
-              account.
+              You can sign in with your existing <ServiceProvidersText />
+              account. <ServiceProvidersTextCreateAcct />
             </p>
           </li>
           <li className="process-step list-two">
@@ -162,17 +189,15 @@ const ConfirmationPage = ({ form, download }) => {
   );
 };
 
+ConfirmationPage.propTypes = {
+  download: PropTypes.func,
+  form: PropTypes.object,
+};
+
 const mapStateToProps = state => {
   return {
     form: state.form,
   };
 };
 
-const mapDispatchToProps = dispatch => ({
-  ...bindActionCreators({ download: downloadPDF }, dispatch),
-});
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps,
-)(ConfirmationPage);
+export default connect(mapStateToProps)(ConfirmationPage);

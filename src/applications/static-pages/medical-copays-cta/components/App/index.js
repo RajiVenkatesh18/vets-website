@@ -5,6 +5,10 @@ import { connect } from 'react-redux';
 // Relative imports.
 import { toggleLoginModal as toggleLoginModalAction } from 'platform/site-wide/user-nav/actions';
 
+import ServiceProvidersText, {
+  ServiceProvidersTextCreateAcct,
+} from 'platform/user/authentication/components/ServiceProvidersText';
+
 export const App = ({ loggedIn, show, toggleLoginModal }) => {
   if (!show) {
     return null;
@@ -13,21 +17,19 @@ export const App = ({ loggedIn, show, toggleLoginModal }) => {
   return (
     <va-alert status={loggedIn ? 'info' : 'continue'}>
       {/* Title */}
-      <h2 slot="headline" className="vads-u-font-size--h3">
+      <h3 slot="headline">
         {loggedIn
           ? 'Review your VA copay balances'
           : 'Please sign in to review your VA copay balances'}
-      </h2>
+      </h3>
 
       {/* Explanation */}
       {loggedIn ? (
         <p>With this tool, you can:</p>
       ) : (
         <p>
-          Try signing in with your <strong>DS Logon</strong>,{' '}
-          <strong>My HealtheVet</strong>, or <strong>ID.me</strong> account. If
-          you don’t have any of those accounts, you can create one now. When you
-          sign in or create an account, you’ll be able to:
+          Sign in with your existing <ServiceProvidersText isBold /> account.{' '}
+          <ServiceProvidersTextCreateAcct hasExtraTodo />
         </p>
       )}
       <ul>
@@ -48,6 +50,7 @@ export const App = ({ loggedIn, show, toggleLoginModal }) => {
         <button
           className="va-button-primary"
           onClick={() => toggleLoginModal(true)}
+          type="button"
         >
           Sign in or create an account
         </button>
@@ -57,11 +60,11 @@ export const App = ({ loggedIn, show, toggleLoginModal }) => {
 };
 
 App.propTypes = {
+  // From mapDispatchToProps.
+  toggleLoginModal: PropTypes.func.isRequired,
   // From mapStateToProps.
   loggedIn: PropTypes.bool,
   show: PropTypes.bool,
-  // From mapDispatchToProps.
-  toggleLoginModal: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = state => ({

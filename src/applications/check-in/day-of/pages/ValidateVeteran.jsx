@@ -1,72 +1,116 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import { connect, useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 
-import { focusElement } from 'platform/utilities/ui';
+import { createSetSession } from '../../actions/authentication';
 
-import { api } from '../api';
+import { useFormRouting } from '../../hooks/useFormRouting';
 
-import { permissionsUpdated } from '../actions';
-import { goToNextPage, URLS } from '../utils/navigation';
-import { SCOPES } from '../../utils/token-format-validator';
-
-import BackToHome from '../components/BackToHome';
-import Footer from '../components/Footer';
+import BackToHome from '../../components/BackToHome';
+import Footer from '../../components/layout/Footer';
 import ValidateDisplay from '../../components/pages/validate/ValidateDisplay';
+import { validateLogin } from '../../utils/validateVeteran';
+import { makeSelectCurrentContext } from '../../selectors';
 
-import { makeSelectContext } from '../hooks/selectors';
+import { useSessionStorage } from '../../hooks/useSessionStorage';
+import { makeSelectFeatureToggles } from '../../utils/selectors/feature-toggles';
 
 const ValidateVeteran = props => {
-  const { router, setPermissions } = props;
+  const { router } = props;
+  const { t } = useTranslation();
+  const dispatch = useDispatch();
+
+  const setSession = useCallback(
+    (token, permissions) => {
+      dispatch(createSetSession({ token, permissions }));
+    },
+    [dispatch],
+  );
+
+  const { goToNextPage, goToErrorPage } = useFormRouting(router);
+
   const [isLoading, setIsLoading] = useState(false);
   const [lastName, setLastName] = useState('');
   const [last4Ssn, setLast4Ssn] = useState('');
 
+  const defaultDob = Object.freeze({
+    day: {
+      value: '',
+      dirty: false,
+    },
+    month: {
+      value: '',
+      dirty: false,
+    },
+    year: {
+      value: '',
+      dirty: false,
+    },
+  });
+  const [dob, setDob] = useState(defaultDob);
+
   const [lastNameErrorMessage, setLastNameErrorMessage] = useState();
   const [last4ErrorMessage, setLast4ErrorMessage] = useState();
+  const [dobErrorMessage, setDobErrorMessage] = useState();
 
-  const selectContext = useMemo(makeSelectContext, []);
-  const { token } = useSelector(selectContext);
+  const selectCurrentContext = useMemo(makeSelectCurrentContext, []);
+  const { token } = useSelector(selectCurrentContext);
 
-  const onClick = async () => {
-    setLastNameErrorMessage();
-    setLast4ErrorMessage();
-    if (!lastName || !last4Ssn) {
-      if (!lastName) {
-        setLastNameErrorMessage('Please enter your last name.');
-      }
-      if (!last4Ssn) {
-        setLast4ErrorMessage(
-          'Please enter the last 4 digits of your Social Security number.',
-        );
-      }
-    } else {
-      // API call
-      setIsLoading(true);
+  const selectFeatureToggles = useMemo(makeSelectFeatureToggles, []);
+  const { isLorotaSecurityUpdatesEnabled } = useSelector(selectFeatureToggles);
 
-      api.v2
-        .postSession({ lastName, last4: last4Ssn, token })
-        .then(data => {
-          // update sessions with new permissions
-          setPermissions(data);
-          // routing
-
-          goToNextPage(router, URLS.DEMOGRAPHICS);
-        })
-        .catch(() => {
-          goToNextPage(router, URLS.ERROR);
-        });
-    }
-  };
-  useEffect(() => {
-    focusElement('h1');
-  }, []);
-
+  const { getValidateAttempts, incrementValidateAttempts } = useSessionStorage(
+    false,
+  );
+  const { isMaxValidateAttempts } = getValidateAttempts(window);
+  const [showValidateError, setShowValidateError] = useState(false);
+  const app = '';
+  const onClick = useCallback(
+    () => {
+      validateLogin(
+        last4Ssn,
+        lastName,
+        dob,
+        showValidateError,
+        setLastNameErrorMessage,
+        setLast4ErrorMessage,
+        setDobErrorMessage,
+        setDob,
+        setIsLoading,
+        setShowValidateError,
+        isLorotaSecurityUpdatesEnabled,
+        goToErrorPage,
+        goToNextPage,
+        incrementValidateAttempts,
+        isMaxValidateAttempts,
+        token,
+        setSession,
+        app,
+      );
+    },
+    [
+      app,
+      goToErrorPage,
+      goToNextPage,
+      incrementValidateAttempts,
+      isMaxValidateAttempts,
+      last4Ssn,
+      lastName,
+      dob,
+      setSession,
+      showValidateError,
+      token,
+      isLorotaSecurityUpdatesEnabled,
+    ],
+  );
   return (
     <>
       <ValidateDisplay
-        header="Check in at VA"
-        subTitle="We need some information to verify your identity so we can check you in."
+        header={t('check-in-at-va')}
+        subTitle={t(
+          'we-need-some-information-to-verify-your-identity-so-we-can-check-you-in',
+        )}
         last4Input={{
           last4ErrorMessage,
           setLast4Ssn,
@@ -77,28 +121,26 @@ const ValidateVeteran = props => {
           setLastName,
           lastName,
         }}
+        dobInput={{
+          dobErrorMessage,
+          setDob,
+          dob,
+        }}
         isLoading={isLoading}
         validateHandler={onClick}
         Footer={Footer}
+        showValidateError={showValidateError}
+        validateErrorMessage={t(
+          'were-sorry-we-couldnt-match-your-information-to-our-records-please-try-again',
+        )}
       />
       <BackToHome />
     </>
   );
 };
 
-const mapDispatchToProps = dispatch => {
-  return {
-    setPermissions: data =>
-      dispatch(permissionsUpdated(data, SCOPES.READ_FULL)),
-  };
-};
-
 ValidateVeteran.propTypes = {
   router: PropTypes.object,
-  setPermissions: PropTypes.func,
 };
 
-export default connect(
-  null,
-  mapDispatchToProps,
-)(ValidateVeteran);
+export default ValidateVeteran;

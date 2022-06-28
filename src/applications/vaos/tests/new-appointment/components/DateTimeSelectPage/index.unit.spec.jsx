@@ -7,6 +7,7 @@ import moment from 'moment';
 import { waitFor, waitForElementToBeRemoved } from '@testing-library/dom';
 import { cleanup } from '@testing-library/react';
 import { mockFetch } from 'platform/testing/unit/helpers';
+import userEvent from '@testing-library/user-event';
 import {
   createTestStore,
   renderWithStoreAndRouter,
@@ -15,7 +16,6 @@ import {
   setClinic,
   setPreferredDate,
 } from '../../../mocks/setup';
-import userEvent from '@testing-library/user-event';
 
 import DateTimeSelectPage from '../../../../new-appointment/components/DateTimeSelectPage';
 import { FETCH_STATUS } from '../../../../utils/constants';
@@ -84,7 +84,7 @@ describe('VAOS <DateTimeSelectPage>', () => {
       },
     );
 
-    const overlay = screen.queryByText(/Finding appointment availability.../i);
+    const overlay = screen.queryByTestId('loadingIndicator');
     if (overlay) {
       await waitForElementToBeRemoved(overlay);
     }
@@ -126,7 +126,7 @@ describe('VAOS <DateTimeSelectPage>', () => {
     });
 
     // NOTE: progressbar does not have an accessible name to query by
-    expect(screen.getByRole('progressbar')).to.be.ok;
+    expect(screen.getByTestId('loadingIndicator')).to.be.ok;
   });
 
   it('should display error message if slots call fails', async () => {
@@ -154,7 +154,7 @@ describe('VAOS <DateTimeSelectPage>', () => {
     );
 
     // 1. Wait for progressbar to disappear
-    const overlay = screen.queryByText(/Finding appointment availability.../i);
+    const overlay = screen.queryByTestId('loadingIndicator');
     if (overlay) {
       await waitForElementToBeRemoved(overlay);
     }
@@ -181,7 +181,7 @@ describe('VAOS <DateTimeSelectPage>', () => {
     ).to.be.ok;
 
     // it should display link to phone number
-    expect(screen.getByText(/800-273-8255/)).to.have.tagName('a');
+    expect(screen.getByTestId('crisis-hotline-telephone')).to.exist;
   });
 
   it('should allow a user to choose available slot and fetch new slots after changing clinics', async () => {
@@ -220,7 +220,7 @@ describe('VAOS <DateTimeSelectPage>', () => {
     );
 
     // 1. Wait for progressbar to disappear
-    let overlay = screen.queryByText(/Finding appointment availability.../i);
+    let overlay = screen.queryByTestId('loadingIndicator');
     if (overlay) {
       await waitForElementToBeRemoved(overlay);
     }
@@ -260,7 +260,7 @@ describe('VAOS <DateTimeSelectPage>', () => {
     });
 
     // 3. Wait for progressbar to disappear
-    overlay = screen.queryByText(/Finding appointment availability.../i);
+    overlay = screen.queryByTestId('loadingIndicator');
     if (overlay) {
       await waitForElementToBeRemoved(overlay);
     }
@@ -325,7 +325,7 @@ describe('VAOS <DateTimeSelectPage>', () => {
     });
 
     // 1. Wait for progressbar to disappear
-    const overlay = screen.queryByText(/Finding appointment availability.../i);
+    const overlay = screen.queryByTestId('loadingIndicator');
     if (overlay) {
       await waitForElementToBeRemoved(overlay);
     }
@@ -637,7 +637,7 @@ describe('VAOS <DateTimeSelectPage>', () => {
     );
 
     // 1. Wait for progressbar to disappear
-    const overlay = screen.queryByText(/Finding appointment availability.../i);
+    const overlay = screen.queryByTestId('loadingIndicator');
     if (overlay) {
       await waitForElementToBeRemoved(overlay);
     }
@@ -726,7 +726,7 @@ describe('VAOS <DateTimeSelectPage>', () => {
       },
     );
 
-    let overlay = screen.queryByText(/Finding appointment availability.../i);
+    let overlay = screen.queryByTestId('loadingIndicator');
     if (overlay) {
       await waitForElementToBeRemoved(overlay);
     }
@@ -742,7 +742,7 @@ describe('VAOS <DateTimeSelectPage>', () => {
     // Need to move two months to trigger second fetch
     userEvent.click(screen.getByText(/^Next/));
     userEvent.click(screen.getByText(/^Next/));
-    overlay = screen.queryByText(/Finding appointment availability.../i);
+    overlay = screen.queryByTestId('loadingIndicator');
     if (overlay) {
       await waitForElementToBeRemoved(overlay);
     }

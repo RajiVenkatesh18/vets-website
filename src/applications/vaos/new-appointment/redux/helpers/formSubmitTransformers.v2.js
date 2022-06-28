@@ -1,7 +1,11 @@
 import moment from 'moment';
 import titleCase from 'platform/utilities/data/titleCase';
 import { selectVAPResidentialAddress } from 'platform/user/selectors';
-import { LANGUAGES, PURPOSE_TEXT } from '../../../utils/constants';
+import {
+  LANGUAGES,
+  PURPOSE_TEXT,
+  PURPOSE_TEXT_V2,
+} from '../../../utils/constants';
 import {
   getTypeOfCare,
   getFormData,
@@ -21,11 +25,19 @@ export function transformFormToVAOSCCRequest(state) {
   if (provider?.identifier) {
     practitioners = [
       {
-        identifier: {
-          system: 'http://hl7.org/fhir/sid/us-npi',
-          value: data.communityCareProvider.identifier.find(
-            item => item.system === 'PPMS',
-          )?.value,
+        identifier: [
+          {
+            system: 'http://hl7.org/fhir/sid/us-npi',
+            value: data.communityCareProvider.identifier.find(
+              item => item.system === 'PPMS',
+            )?.value,
+          },
+        ],
+        address: {
+          line: provider.address.line,
+          city: provider.address.city,
+          state: provider.address.state,
+          postalCode: provider.address.postalCode,
         },
       },
     ];
@@ -35,7 +47,7 @@ export function transformFormToVAOSCCRequest(state) {
 
   if (
     residentialAddress &&
-    residentialAddress.addressType !== 'MILITARY OVERSEAS'
+    residentialAddress.addressType !== 'OVERSEAS MILITARY'
   ) {
     preferredLocation = {
       city: residentialAddress.city,
@@ -91,6 +103,9 @@ export function transformFormToVAOSCCRequest(state) {
 export function transformFormToVAOSVARequest(state) {
   const data = getFormData(state);
   const typeOfCare = getTypeOfCare(data);
+  const code = PURPOSE_TEXT_V2.find(
+    purpose => purpose.id === data.reasonForAppointment,
+  )?.serviceName;
 
   return {
     kind: data.visitType,
@@ -98,15 +113,20 @@ export function transformFormToVAOSVARequest(state) {
     locationId: data.vaFacility,
     // This may need to change when we get the new service type ids
     serviceType: typeOfCare.idV2,
-    reasonCode: {
-      coding: [
-        {
-          code: PURPOSE_TEXT.find(
-            purpose => purpose.id === data.reasonForAppointment,
-          )?.serviceName,
-        },
-      ],
-    },
+    reasonCode:
+      code === 'Other'
+        ? {
+            coding: [],
+            text: data.reasonAdditionalInfo.slice(0, 100),
+          }
+        : {
+            coding: [
+              {
+                code,
+              },
+            ],
+            text: code,
+          },
     comment: data.reasonAdditionalInfo,
     contact: {
       telecom: [
@@ -146,8 +166,11 @@ function getUserMessage(data) {
 export function transformFormToVAOSAppointment(state) {
   const data = getFormData(state);
   const clinic = getChosenClinicInfo(state);
-  const typeOfCare = getTypeOfCare(data);
   const slot = getChosenSlot(state);
+
+  // slot start and end times are not allowed on a booked va appointment.
+  delete slot.start;
+  delete slot.end;
 
   return {
     kind: 'clinic',
@@ -155,22 +178,10 @@ export function transformFormToVAOSAppointment(state) {
     clinic: getClinicId(clinic),
     slot,
     extension: {
-      desiredDate: data.preferredDate,
+      desiredDate: `${data.preferredDate}T00:00:00+00:00`,
     },
     locationId: data.vaFacility,
-    serviceType: typeOfCare.idV2,
+    // removing this for now, it's preventing QA from testing, will re-introduce when the team figures out how we're handling the comment field
     comment: getUserMessage(data),
-    contact: {
-      telecom: [
-        {
-          type: 'phone',
-          value: data.phoneNumber,
-        },
-        {
-          type: 'email',
-          value: data.email,
-        },
-      ],
-    },
   };
 }

@@ -2,5 +2,6 @@
   "appName": "Search",
   "entryFile": "./search-entry.jsx",
   "entryName": "search",
-  "rootUrl": "/search"
+  "rootUrl": "/search",
+  "productId": "2408a96e-8045-4d92-a744-31cd78818c83"
 }

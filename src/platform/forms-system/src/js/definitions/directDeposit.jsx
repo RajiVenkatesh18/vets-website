@@ -51,11 +51,12 @@ const uiSchema = ({ affectedBenefits, unaffectedBenefits, optionalFields }) => {
         classNames: 'vads-u-margin-bottom--3',
         hideIf: form => !usingDirectDeposit(form),
         reviewTitle: 'Direct deposit information',
-        editTitle: 'Direct deposit information',
+        editTitle: 'Edit direct deposit information',
         itemName: 'account information',
         itemNameAction: 'Update',
         startInEdit: data => !data?.['view:hasPrefilledBank'],
         volatileData: true,
+        ariaLabel: 'Save direct deposit information',
       },
       'ui:order': [
         'view:paymentText',
@@ -215,7 +216,7 @@ const schema = optionalFields => {
  *        with schema and uiSchema properties to override either or both.
  */
 export default ({ affectedBenefits, unaffectedBenefits, optionalFields }) => {
-  const optFields = Object.assign({}, defaultOptionalFields, optionalFields);
+  const optFields = { ...defaultOptionalFields, ...optionalFields };
   return {
     uiSchema: uiSchema({
       affectedBenefits,

@@ -1,33 +1,68 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import { COE_ELIGIBILITY_STATUS } from '../../../shared/constants';
-import COEAvailable from './COEStatuses/COEAvailable';
-import COEDenied from './COEStatuses/COEDenied';
-import COEEligible from './COEStatuses/COEEligible';
-import COEIneligible from './COEStatuses/COEIneligible';
-import COEPending from './COEStatuses/COEPending';
+import {
+  Available,
+  Denied,
+  Eligible,
+  Ineligible,
+  Pending,
+} from '../../components/statuses';
 
-const COEIntroPageBox = props => {
-  if (props.coe.status) {
-    switch (props.coe.status) {
+const COEIntroPageBox = ({
+  downloadUrl,
+  referenceNumber,
+  requestDate,
+  status,
+}) => {
+  if (status) {
+    switch (status) {
       case COE_ELIGIBILITY_STATUS.available:
-        return <COEAvailable />;
+        return (
+          <Available
+            downloadUrl={downloadUrl}
+            referenceNumber={referenceNumber}
+            requestDate={requestDate}
+          />
+        );
       case COE_ELIGIBILITY_STATUS.denied:
-        return <COEDenied />;
+        return (
+          <Denied referenceNumber={referenceNumber} requestDate={requestDate} />
+        );
       case COE_ELIGIBILITY_STATUS.eligible:
-        return <COEEligible />;
+        return (
+          <Eligible
+            downloadUrl={downloadUrl}
+            referenceNumber={referenceNumber}
+          />
+        );
       case COE_ELIGIBILITY_STATUS.ineligible:
       case COE_ELIGIBILITY_STATUS.unableToDetermine:
-        return <COEIneligible />;
+        return <Ineligible />;
       case COE_ELIGIBILITY_STATUS.pending:
       case COE_ELIGIBILITY_STATUS.pendingUpload:
-        return <COEPending status={props.coe.status} />;
+        return (
+          <Pending
+            origin="form"
+            referenceNumber={referenceNumber}
+            requestDate={requestDate}
+            status={status}
+          />
+        );
       default:
         return <></>;
     }
   }
 
   return <></>;
+};
+
+COEIntroPageBox.propTypes = {
+  downloadUrl: PropTypes.string,
+  referenceNumber: PropTypes.string,
+  requestDate: PropTypes.number,
+  status: PropTypes.string,
 };
 
 export default COEIntroPageBox;

@@ -1,7 +1,6 @@
 import constants from 'vets-json-schema/dist/constants.json';
-import countries from './countries.json';
-
 import ADDRESS_DATA from 'platform/forms/address/data';
+import countries from './countries.json';
 
 export const MILITARY_STATES = new Set(ADDRESS_DATA.militaryStates);
 
@@ -30,6 +29,19 @@ export const ADDRESS_POU = {
   CORRESPONDENCE: 'CORRESPONDENCE',
   RESIDENCE: 'RESIDENCE/CHOICE',
 };
+
+// address props that are primarily used for comparing two addresses
+export const ADDRESS_PROPS = [
+  'addressLine1',
+  'addressLine2',
+  'addressLine3',
+  'city',
+  'countryCodeIso3',
+  'internationalPostalCode',
+  'province',
+  'stateCode',
+  'zipCode',
+];
 
 export const USA = {
   COUNTRY_NAME: 'United States',
@@ -66,11 +78,15 @@ export const TRANSACTION_STATUS = {
 
 export const INIT_VAP_SERVICE_ID = 'initializeVAProfileServiceID';
 
-export const FIELD_NAMES = {
+export const PERSONAL_INFO_FIELD_NAMES = {
   PREFERRED_NAME: 'preferredName',
   PRONOUNS: 'pronouns',
   GENDER_IDENTITY: 'genderIdentity',
   SEXUAL_ORIENTATION: 'sexualOrientation',
+};
+
+export const FIELD_NAMES = {
+  ...PERSONAL_INFO_FIELD_NAMES,
   HOME_PHONE: 'homePhone',
   MOBILE_PHONE: 'mobilePhone',
   WORK_PHONE: 'workPhone',
@@ -94,6 +110,14 @@ export const FIELD_TITLES = {
   [FIELD_NAMES.EMAIL]: 'Contact email address',
   [FIELD_NAMES.MAILING_ADDRESS]: 'Mailing address',
   [FIELD_NAMES.RESIDENTIAL_ADDRESS]: 'Home address',
+};
+
+// optional 'hint text' to display below field titles
+export const FIELD_TITLE_DESCRIPTIONS = {
+  [FIELD_NAMES.EMAIL]: 'We use this email to send you information.',
+  [FIELD_NAMES.MAILING_ADDRESS]:
+    'We send your VA letters, bills, and prescriptions to this address.',
+  [FIELD_NAMES.RESIDENTIAL_ADDRESS]: 'This is where you currently live.',
 };
 
 // These are intended to be used as values for HTML element id attributes
@@ -145,6 +169,8 @@ export const API_ROUTES = {
   TELEPHONES: '/profile/telephones',
   EMAILS: '/profile/email_addresses',
   ADDRESSES: '/profile/addresses',
+  PREFERRED_NAME: '/profile/preferred_names',
+  GENDER_IDENTITY: '/profile/gender_identities',
 };
 
 export const VAP_SERVICE_INITIALIZATION_STATUS = {
@@ -156,4 +182,18 @@ export const VAP_SERVICE_INITIALIZATION_STATUS = {
 
 export const ACTIVE_EDIT_VIEWS = {
   ADDRESS_VALIDATION: 'addressValidation',
+};
+
+export const MISSING_CONTACT_INFO = {
+  ALL: 'ALL',
+  EMAIL: 'EMAIL',
+  MOBILE: 'MOBILE',
+};
+
+export const COPY_ADDRESS_MODAL_STATUS = {
+  CHECKING: 'checking',
+  PROMPT: 'prompt',
+  PENDING: 'pending',
+  SUCCESS: 'success',
+  FAILURE: 'failure',
 };

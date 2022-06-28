@@ -1,9 +1,9 @@
-import fullSchemaHca from 'vets-json-schema/dist/10-10EZ-schema.json';
-
 import React from 'react';
-
-import AdditionalInfo from '@department-of-veterans-affairs/component-library/AdditionalInfo';
+import fullSchemaHca from 'vets-json-schema/dist/10-10EZ-schema.json';
 import PrefillMessage from 'platform/forms/save-in-progress/PrefillMessage';
+
+import { ShortFormMessage } from '../../../components/FormAlerts';
+import { HIGH_DISABILITY, emptyObjectSchema } from '../../../helpers';
 
 const { sigiIsAmericanIndian } = fullSchemaHca.properties;
 
@@ -17,8 +17,11 @@ const Description = props => {
         need to pay a copay for care or services.
       </p>
 
-      <div className="vads-u-margin-top--3 vads-u-margin-bottom--7">
-        <AdditionalInfo triggerText="What it means to be recognized as an American Indian or Alaska Native">
+      <div
+        className="vads-u-margin-top--3 vads-u-margin-bottom--7"
+        data-testid="aiq-addl-info"
+      >
+        <va-additional-info trigger="What it means to be recognized as an American Indian or Alaska Native">
           <div>
             For the purposes of this application, we consider this to mean that
             one of these descriptions is true for you:
@@ -83,7 +86,7 @@ const Description = props => {
           >
             Learn more about the IHCIA on the Indian Health Service website
           </a>
-        </AdditionalInfo>
+        </va-additional-info>
       </div>
     </>
   );
@@ -91,7 +94,20 @@ const Description = props => {
 
 export default {
   uiSchema: {
-    'ui:description': Description,
+    'view:aiqShortFormMessage': {
+      'ui:description': ShortFormMessage,
+      'ui:options': {
+        hideIf: form =>
+          !(
+            form['view:hcaShortFormEnabled'] &&
+            form['view:totalDisabilityRating'] &&
+            form['view:totalDisabilityRating'] >= HIGH_DISABILITY
+          ),
+      },
+    },
+    'view:aiqDescription': {
+      'ui:description': Description,
+    },
     sigiIsAmericanIndian: {
       'ui:title':
         'Are you recognized as an American Indian or Alaska Native by any tribal, state, or federal law or regulation?',
@@ -102,6 +118,8 @@ export default {
     type: 'object',
     required: ['sigiIsAmericanIndian'],
     properties: {
+      'view:aiqShortFormMessage': emptyObjectSchema,
+      'view:aiqDescription': emptyObjectSchema,
       sigiIsAmericanIndian,
     },
   },

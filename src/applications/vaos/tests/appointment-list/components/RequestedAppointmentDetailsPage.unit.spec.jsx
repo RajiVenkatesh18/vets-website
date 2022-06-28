@@ -42,6 +42,7 @@ const initialState = {
 const initialStateVAOSService = {
   featureToggles: {
     vaOnlineSchedulingVAOSServiceRequests: true,
+    vaOnlineSchedulingVAOSServiceCCAppointments: true,
   },
 };
 
@@ -146,7 +147,7 @@ describe('VAOS <RequestedAppointmentDetailsPage>', () => {
       'Cheyenne, WyomingWY 82001-5356',
     );
     expect(screen.baseElement).to.contain.text('Main phone:');
-    expect(screen.baseElement).to.contain.text('307-778-7550');
+    expect(screen.getByTestId('facility-telephone')).to.exist;
     expect(screen.baseElement).to.contain.text('Preferred date and time');
     expect(screen.baseElement).to.contain.text(
       `${moment(appointment.attributes.optionDate1).format(
@@ -183,7 +184,7 @@ describe('VAOS <RequestedAppointmentDetailsPage>', () => {
     expect(screen.baseElement).to.contain.text('New issue');
     expect(await screen.findByText(/A message from the patient/i)).to.be.ok;
     expect(screen.baseElement).to.contain.text('patient.test@va.gov');
-    expect(screen.baseElement).to.contain.text('703-652-0000');
+    expect(screen.getByTestId('patient-telephone')).to.exist;
     expect(screen.baseElement).to.contain.text('Call morning');
   });
 
@@ -371,7 +372,7 @@ describe('VAOS <RequestedAppointmentDetailsPage>', () => {
     fireEvent.click(screen.getByText(/yes, cancel this request/i));
 
     // Then it should display request is canceled
-    await screen.findByText(/your request has been canceled/i);
+    await screen.findByTestId('cancel-request-SuccessModal');
 
     const cancelData = JSON.parse(
       global.fetch
@@ -390,7 +391,7 @@ describe('VAOS <RequestedAppointmentDetailsPage>', () => {
     fireEvent.click(screen.getByText(/continue/i));
 
     expect(screen.queryByRole('alertdialog')).to.not.be.ok;
-    expect(screen.baseElement).to.contain.text('You canceled this appointment');
+    expect(screen.baseElement).to.contain.text('You canceled this request');
     expect(screen.baseElement).not.to.contain.text(alertText);
   });
 
@@ -617,8 +618,7 @@ describe('VAOS <RequestedAppointmentDetailsPage>', () => {
 
     fireEvent.click(screen.getByText(/yes, cancel this request/i));
 
-    await screen.findByText(/We couldn’t cancel your request/i);
-
+    await screen.findByRole('alertdialog');
     expect(screen.baseElement).not.to.contain.text('Canceled');
   });
 });
@@ -718,25 +718,52 @@ describe('VAOS <RequestedAppointmentDetailsPage> with VAOS service', () => {
       'Cheyenne, WyomingWY 82001-5356',
     );
     expect(screen.baseElement).to.contain.text('Main phone:');
-    expect(screen.baseElement).to.contain.text('307-778-7550');
+    expect(screen.getByTestId('facility-telephone')).to.exist;
     expect(screen.baseElement).to.contain.text('Preferred type of appointment');
     expect(screen.baseElement).to.contain.text('Office visit');
     expect(screen.baseElement).to.contain.text('Preferred date and time');
-    expect(screen.baseElement).to.contain.text(
-      `${moment(appointment.attributes.requestedPeriods[0].start).format(
-        'ddd, MMMM D, YYYY',
-      )} in the afternoon`,
+
+    const start = moment(
+      appointment.attributes.requestedPeriods[0].start,
+      'YYYY-MM-DDTHH:mm:ss',
     );
+
     expect(screen.baseElement).to.contain.text(
-      `${moment(appointment.attributes.requestedPeriods[1].start).format(
-        'ddd, MMMM D, YYYY',
-      )} in the afternoon`,
+      `${start.format('ddd, MMMM D, YYYY')} ${
+        start.isBetween(
+          moment(start).hour(0),
+          moment(start).hour(12),
+          'hour',
+          '[)',
+        )
+          ? 'in the morning'
+          : 'in the afternoon'
+      }`,
     );
+
+    const start1 = moment(
+      appointment.attributes.requestedPeriods[1].start,
+      'YYYY-MM-DDTHH:mm:ss',
+    );
+
+    expect(screen.baseElement).to.contain.text(
+      `${start1.format('ddd, MMMM D, YYYY')} ${
+        start1.isBetween(
+          moment(start1).hour(0),
+          moment(start1).hour(12),
+          'hour',
+          '[)',
+        )
+          ? 'in the morning'
+          : 'in the afternoon'
+      }`,
+    );
+
     expect(screen.baseElement).to.contain.text('New issue');
 
     expect(await screen.findByText(/A message from the patient/i)).to.be.ok;
     expect(screen.baseElement).to.contain.text('veteranemailtest@va.gov');
-    expect(screen.baseElement).to.contain.text('212-555-1212');
+    expect(screen.getByTestId('patient-telephone')).to.exist;
     expect(screen.baseElement).to.contain.text('Call morning');
   });
 
@@ -754,7 +781,7 @@ describe('VAOS <RequestedAppointmentDetailsPage> with VAOS service', () => {
       kind: 'cc',
       locationId: '983GC',
       id: '1234',
-      practitioners: [{ identifier: { value: '123' } }],
+      practitioners: [{ identifier: [{ value: '123' }] }],
       preferredTimesForPhoneCall: ['Morning'],
       reason: 'New Issue',
       requestedPeriods: [
@@ -800,6 +827,7 @@ describe('VAOS <RequestedAppointmentDetailsPage> with VAOS service', () => {
       expect(document.activeElement).to.have.tagName('h1');
     });
 
+    expect(screen.getByText(/Type of care/)).to.be.ok;
     expect(
       screen.getByRole('heading', {
         level: 1,
@@ -825,7 +853,6 @@ describe('VAOS <RequestedAppointmentDetailsPage> with VAOS service', () => {
         name: 'Preferred community care provider',
       }),
     ).to.be.ok;
-    expect(screen.getByText('Atlantic Medical Care')).to.be.ok;
 
     expect(
       screen.getByRole('heading', {
@@ -833,13 +860,24 @@ describe('VAOS <RequestedAppointmentDetailsPage> with VAOS service', () => {
         name: 'Preferred date and time',
       }),
     ).to.be.ok;
-    expect(
-      screen.getByText(
-        `${moment(
-          ccAppointmentRequest.attributes.requestedPeriods[1].start,
-        ).format('ddd, MMMM D, YYYY')} in the afternoon`,
-      ),
-    ).to.be.ok;
+
+    const start1 = moment(
+      ccAppointmentRequest.attributes.requestedPeriods[1].start,
+      'YYYY-MM-DDTHH:mm:ss',
+    );
+
+    expect(screen.baseElement).to.contain.text(
+      `${start1.format('ddd, MMMM D, YYYY')} ${
+        start1.isBetween(
+          moment(start1).hour(0),
+          moment(start1).hour(12),
+          'hour',
+          '[)',
+        )
+          ? 'in the morning'
+          : 'in the afternoon'
+      }`,
+    );
 
     expect(
       screen.getByRole('heading', {
@@ -919,7 +957,7 @@ describe('VAOS <RequestedAppointmentDetailsPage> with VAOS service', () => {
     fireEvent.click(screen.getByText(/yes, cancel this request/i));
 
     // Then is should display request is canceled
-    await screen.findByText(/your request has been canceled/i);
+    await screen.findByTestId('cancel-request-SuccessModal');
     const cancelData = JSON.parse(
       global.fetch
         .getCalls()
@@ -933,7 +971,7 @@ describe('VAOS <RequestedAppointmentDetailsPage> with VAOS service', () => {
     fireEvent.click(screen.getByText(/continue/i));
 
     expect(screen.queryByRole('alertdialog')).to.not.be.ok;
-    expect(screen.baseElement).to.contain.text('You canceled this appointment');
+    expect(screen.baseElement).to.contain.text('You canceled this request');
   });
 
   it('should handle error when canceling', async () => {
@@ -984,8 +1022,107 @@ describe('VAOS <RequestedAppointmentDetailsPage> with VAOS service', () => {
     await screen.findByRole('alertdialog');
 
     fireEvent.click(screen.getByText(/yes, cancel this request/i));
-    await screen.findByText(/We couldn’t cancel your request/i);
+    await screen.findByTestId('cancel-request-SuccessModal');
 
     expect(screen.baseElement).not.to.contain.text('Canceled');
+  });
+
+  it('should render CC request with correct requested dates', async () => {
+    const ccAppointmentRequest = getVAOSRequestMock();
+    ccAppointmentRequest.id = '1234';
+
+    ccAppointmentRequest.attributes = {
+      cancellable: true,
+      comment: 'A message from the patient',
+      contact: {
+        telecom: [
+          { type: 'phone', value: '2125551212' },
+          { type: 'email', value: 'veteranemailtest@va.gov' },
+        ],
+      },
+      kind: 'cc',
+      locationId: '983GC',
+      id: '1234',
+      practitioners: [{ identifier: [{ value: '123' }] }],
+      preferredTimesForPhoneCall: ['Morning'],
+      reason: 'New Issue',
+      requestedPeriods: [
+        {
+          start: `${moment(testDate)
+            .add(3, 'days')
+            .format('YYYY-MM-DD')}T00:00:00Z`,
+        },
+        {
+          start: `${moment(testDate)
+            .add(3, 'days')
+            .format('YYYY-MM-DD')}T12:00:00Z`,
+        },
+      ],
+      serviceType: '203',
+      start: null,
+      status: 'proposed',
+    };
+
+    mockSingleVAOSRequestFetch({ request: ccAppointmentRequest });
+
+    const ccProvider = {
+      id: '123',
+      type: 'provider',
+      attributes: {
+        address: {},
+        caresitePhone: null,
+        name: 'Atlantic Medical Care',
+        lat: null,
+        long: null,
+        uniqueId: '123',
+      },
+    };
+    mockCCSingleProviderFetch(ccProvider);
+
+    const screen = renderWithStoreAndRouter(<AppointmentList />, {
+      initialState: initialStateVAOSService,
+      path: `/requests/${ccAppointmentRequest.id}`,
+    });
+
+    // Verify page content...
+    await waitFor(() => {
+      expect(document.activeElement).to.have.tagName('h1');
+    });
+
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: 'Pending audiology and speech appointment',
+      }),
+    ).to.be.ok;
+
+    expect(
+      screen.getByRole('heading', {
+        level: 2,
+        name: 'Preferred date and time',
+      }),
+    ).to.be.ok;
+
+    expect(
+      screen.getByText(
+        `${moment(
+          ccAppointmentRequest.attributes.requestedPeriods[0].start.replace(
+            'Z',
+            '',
+          ),
+        ).format('ddd, MMMM D, YYYY')} in the morning`,
+      ),
+    ).to.be.ok;
+
+    expect(
+      screen.getByText(
+        `${moment(
+          ccAppointmentRequest.attributes.requestedPeriods[1].start.replace(
+            'Z',
+            '',
+          ),
+        ).format('ddd, MMMM D, YYYY')} in the afternoon`,
+      ),
+    ).to.be.ok;
   });
 });

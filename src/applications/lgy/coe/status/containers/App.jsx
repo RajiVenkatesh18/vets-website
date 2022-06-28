@@ -1,40 +1,47 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 
 import FormTitle from 'platform/forms-system/src/js/components/FormTitle';
-import { isLoggedIn } from 'platform/user/selectors';
-import backendServices from 'platform/user/profile/constants/backendServices';
 import RequiredLoginView from 'platform/user/authorization/components/RequiredLoginView';
+import backendServices from 'platform/user/profile/constants/backendServices';
+import { isLoggedIn } from 'platform/user/selectors';
+
 import { generateCoe } from '../../shared/actions';
-import { CoeAvailable } from '../components/CoeAvailable';
-import { CoeDenied } from '../components/CoeDenied';
-import { CoeEligible } from '../components/CoeEligible';
-import { CoeIneligible } from '../components/CoeIneligible';
-import { CoePending } from '../components/CoePending';
+import { CALLSTATUS, COE_ELIGIBILITY_STATUS } from '../../shared/constants';
 import {
-  CALLSTATUS,
-  COE_FORM_NUMBER,
-  COE_ELIGIBILITY_STATUS,
-} from '../../shared/constants';
+  Available,
+  Denied,
+  Eligible,
+  Ineligible,
+  Pending,
+} from '../components/statuses';
 
-const App = props => {
-  const {
-    loggedIn,
-    certificateOfEligibility: { generateAutoCoeStatus, profileIsUpdating, coe },
-    hasSavedForm,
-  } = props;
-
-  const clickHandler = () => {
-    props.generateCoe('skip');
-  };
+const App = ({
+  certificateOfEligibility: {
+    coe,
+    downloadUrl,
+    generateAutoCoeStatus,
+    profileIsUpdating,
+  },
+  getCoe,
+  loggedIn,
+  user,
+}) => {
+  const clickHandler = useCallback(
+    () => {
+      getCoe('skip');
+    },
+    [getCoe],
+  );
 
   useEffect(
     () => {
-      if (!profileIsUpdating && loggedIn && !hasSavedForm && !coe) {
-        props.generateCoe();
+      if (!profileIsUpdating && loggedIn && !coe) {
+        getCoe();
       }
     },
-    [loggedIn],
+    [coe, getCoe, loggedIn, profileIsUpdating],
   );
 
   let content;
@@ -51,35 +58,55 @@ const App = props => {
   ) {
     switch (coe.status) {
       case COE_ELIGIBILITY_STATUS.available:
-        content = <CoeAvailable />;
+        content = <Available downloadUrl={downloadUrl} />;
         break;
       case COE_ELIGIBILITY_STATUS.eligible:
-        content = <CoeEligible clickHandler={clickHandler} />;
+        content = (
+          <Eligible
+            clickHandler={clickHandler}
+            downloadUrl={downloadUrl}
+            referenceNumber={coe.referenceNumber}
+          />
+        );
         break;
       case COE_ELIGIBILITY_STATUS.ineligible:
-        content = <CoeIneligible />;
+        content = <Ineligible />;
         break;
       case COE_ELIGIBILITY_STATUS.denied:
-        content = <CoeDenied />;
+        content = <Denied referenceNumber={coe.referenceNumber} />;
         break;
       case COE_ELIGIBILITY_STATUS.pending:
-        content = <CoePending notOnUploadPage />;
+        content = (
+          <Pending
+            notOnUploadPage
+            referenceNumber={coe.referenceNumber}
+            requestDate={coe.applicationCreateDate}
+            status={coe.status}
+          />
+        );
         break;
       case COE_ELIGIBILITY_STATUS.pendingUpload:
-        content = <CoePending uploadsNeeded />;
+        content = (
+          <Pending
+            referenceNumber={coe.referenceNumber}
+            requestDate={coe.applicationCreateDate}
+            status={coe.status}
+            uploadsNeeded
+          />
+        );
         break;
       default:
-        content = <CoeIneligible />;
+        content = <Ineligible />;
     }
   } else {
-    content = <CoeIneligible />;
+    content = <Ineligible />;
   }
 
   return (
     <>
       <RequiredLoginView
         serviceRequired={backendServices.USER_PROFILE}
-        user={props.user}
+        user={user}
       >
         <header className="row vads-u-padding-x--1">
           <FormTitle title="Your VA home loan COE" />
@@ -91,16 +118,20 @@ const App = props => {
 };
 
 const mapStateToProps = state => ({
+  certificateOfEligibility: state.certificateOfEligibility,
   user: state.user,
   loggedIn: isLoggedIn(state),
-  certificateOfEligibility: state.certificateOfEligibility,
-  hasSavedForm: state?.user?.profile?.savedForms.some(
-    form => form.form === COE_FORM_NUMBER,
-  ),
 });
 
 const mapDispatchToProps = {
-  generateCoe,
+  getCoe: generateCoe,
+};
+
+App.propTypes = {
+  certificateOfEligibility: PropTypes.object,
+  getCoe: PropTypes.func,
+  loggedIn: PropTypes.bool,
+  user: PropTypes.object,
 };
 
 export default connect(

@@ -60,7 +60,6 @@
           "~": "./src",
           "@@vap-svc": "./src/platform/user/profile/vap-svc",
           "@@profile": "./src/applications/personalization/profile",
-          "web-components/react-bindings": "@department-of-veterans-affairs/component-library/dist/react-bindings",
           "@department-of-veterans-affairs/component-library/LoadingIndicator": "@department-of-veterans-affairs/react-components/LoadingIndicator",
           "@department-of-veterans-affairs/component-library/AlertBox": "@department-of-veterans-affairs/react-components/AlertBox",
           "@department-of-veterans-affairs/component-library/ProgressButton": "@department-of-veterans-affairs/react-components/ProgressButton",
@@ -74,7 +73,6 @@
           "@department-of-veterans-affairs/component-library/Checkbox": "@department-of-veterans-affairs/react-components/Checkbox",
           "@department-of-veterans-affairs/component-library/DropDownPanel": "@department-of-veterans-affairs/react-components/DropDownPanel",
           "@department-of-veterans-affairs/component-library/AdditionalInfo": "@department-of-veterans-affairs/react-components/AdditionalInfo"
-
         }
       }
     ]
@@ -82,9 +80,10 @@
   // Share polyfills between files.
   "env": {
     "test": {
-      "presets": ["@babel/env"],
+      "presets": ["@babel/env", "@babel/preset-react"],
       "plugins": [
         "istanbul",
+        "transform-class-properties",
         "dynamic-import-node",
         "transform-react-remove-prop-types",
         // Stage 2

@@ -2,7 +2,7 @@ import React from 'react';
 import SkinDeep from 'skin-deep';
 import { expect } from 'chai';
 
-import { LetterList } from '../../containers/LetterList.jsx';
+import { LetterList } from '../../containers/LetterList';
 import { AVAILABILITY_STATUSES } from '../../utils/constants';
 
 const defaultProps = {
@@ -31,18 +31,18 @@ describe('<LetterList>', () => {
     expect(tree.type).to.equal('div');
   });
 
-  it('renders collapsible panels for each letter', () => {
+  it('renders an accordion for each letter', () => {
     const tree = SkinDeep.shallowRender(<LetterList {...defaultProps} />);
-    const collapsibles = tree.everySubTree('CollapsiblePanel');
-    expect(collapsibles.length).to.equal(3);
+    const accordions = tree.everySubTree('va-accordion-item');
+    expect(accordions.length).to.equal(3);
   });
 
   it('passes the right title prop for each panel', () => {
     const component = SkinDeep.shallowRender(<LetterList {...defaultProps} />);
-    const panels = component.everySubTree('CollapsiblePanel');
+    const panels = component.everySubTree('va-accordion-item');
     defaultProps.letters.forEach((letter, index) => {
-      const letterProps = panels[index].props;
-      expect(letterProps.panelName).to.equal(defaultProps.letters[index].name);
+      const letterProps = panels[index].dive(['h3']).text();
+      expect(letterProps).to.contain(defaultProps.letters[index].name);
     });
   });
 
@@ -50,51 +50,42 @@ describe('<LetterList>', () => {
     const component = SkinDeep.shallowRender(<LetterList {...defaultProps} />);
 
     const checkButtonInPanel = panel => {
-      const renderedPanel = panel.getRenderOutput();
-      const downloadButton = renderedPanel.props.children[1]; // 0 content 1 DL link 2 BSL instrct
-      expect(downloadButton.type.displayName).to.equal(
-        'Connect(DownloadLetterLink)',
-      );
+      expect(panel.text()).to.contain('Connect(DownloadLetterLink)');
     };
 
-    component.everySubTree('CollapsiblePanel').forEach(checkButtonInPanel);
+    component.everySubTree('va-accordion-item').forEach(checkButtonInPanel);
   });
 
   it('does not render DL button for BSL if !optionsAvailable', () => {
-    const assertButtonUndefined = panel => {
-      const renderedPanel = panel.getRenderOutput();
-      const downloadButton = renderedPanel.props.children[1]; // 0 content 1 DL link 2 BSL instrct
-      expect(downloadButton).to.be.undefined;
+    const assertButtonUndefined = panelText => {
+      expect(panelText).to.not.contain('Connect(DownloadLetterLink)');
     };
 
-    const isBSL = panel =>
-      panel.props.panelName === defaultProps.letters[1].name;
+    const isBSL = panelText => panelText.includes(defaultProps.letters[1].name);
     const props = { ...defaultProps, optionsAvailable: false };
     const component = SkinDeep.shallowRender(<LetterList {...props} />);
 
     component
-      .everySubTree('CollapsiblePanel')
+      .everySubTree('va-accordion-item')
+      .map(panel => panel.text())
       .filter(isBSL)
       .forEach(assertButtonUndefined);
   });
 
   it('renders DL button for non-benefit-summary letters if !optionsAvailable', () => {
-    const checkButtonInPanel = panel => {
-      const renderedPanel = panel.getRenderOutput();
-      const downloadButton = renderedPanel.props.children[1]; // 0 content 1 DL link 2 BSL instrct
-      expect(downloadButton.type.displayName).to.equal(
-        'Connect(DownloadLetterLink)',
-      );
+    const checkButtonInPanel = panelText => {
+      expect(panelText).to.includes('Connect(DownloadLetterLink)');
     };
 
-    const isNotBSL = panel =>
-      panel.props.panelName !== defaultProps.letters[1].name;
+    const isNotBSL = panelText =>
+      !panelText.includes(defaultProps.letters[1].name);
 
     const props = { ...defaultProps, optionsAvailable: false };
     const component = SkinDeep.shallowRender(<LetterList {...props} />);
 
     component
-      .everySubTree('CollapsiblePanel')
+      .everySubTree('va-accordion-item')
+      .map(panel => panel.text())
       .filter(isNotBSL)
       .forEach(checkButtonInPanel);
   });
@@ -105,8 +96,8 @@ describe('<LetterList>', () => {
       lettersAvailability: AVAILABILITY_STATUSES.letterEligibilityError,
     };
     const component = SkinDeep.shallowRender(<LetterList {...props} />);
-    const eligibilityMessage = component.subTree('.usa-alert-text').text();
-    expect(eligibilityMessage).to.contain(
+    const eligibilityMessage = component.subTree('va-alert').dive(['p']).props;
+    expect(eligibilityMessage.children).to.contain(
       'One of our systems appears to be down.',
     );
   });

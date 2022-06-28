@@ -1,41 +1,27 @@
 import moment from 'moment';
-import { getPatientInstruction } from '../appointment';
+import { getPatientInstruction } from '.';
 import {
-  TYPES_OF_CARE,
   APPOINTMENT_TYPES,
   PURPOSE_TEXT,
   TYPE_OF_VISIT,
-  TYPES_OF_EYE_CARE,
-  TYPES_OF_SLEEP_CARE,
-  AUDIOLOGY_TYPES_OF_CARE,
   COVID_VACCINE_ID,
 } from '../../utils/constants';
 import { getTimezoneByFacilityId } from '../../utils/timezone';
 import { transformFacilityV2 } from '../location/transformers.v2';
+import { getTypeOfCareById } from '../../utils/appointment';
 
 function getAppointmentType(appt) {
   if (appt.kind === 'cc' && appt.start) {
     return APPOINTMENT_TYPES.ccAppointment;
-  } else if (appt.kind === 'cc' && appt.requestedPeriods?.length) {
+  }
+  if (appt.kind === 'cc' && appt.requestedPeriods?.length) {
     return APPOINTMENT_TYPES.ccRequest;
-  } else if (appt.kind !== 'cc' && appt.requestedPeriods?.length) {
+  }
+  if (appt.kind !== 'cc' && appt.requestedPeriods?.length) {
     return APPOINTMENT_TYPES.request;
   }
 
   return APPOINTMENT_TYPES.vaAppointment;
-}
-
-function getTypeOfCareById(id) {
-  const allTypesOfCare = [
-    ...TYPES_OF_EYE_CARE,
-    ...TYPES_OF_SLEEP_CARE,
-    ...AUDIOLOGY_TYPES_OF_CARE,
-    ...TYPES_OF_CARE,
-  ];
-
-  return allTypesOfCare.find(
-    care => care.idV2 === id || care.ccId === id || care.id === id,
-  );
 }
 
 /**
@@ -80,7 +66,7 @@ export function isPastAppointment(appt) {
  * @returns {String} returns format data
  */
 function getAtlasLocation(appt) {
-  const atlas = appt.telehealth.atlas;
+  const { atlas } = appt.telehealth;
   return {
     id: atlas.siteCode,
     resourceType: 'Location',
@@ -121,10 +107,10 @@ export function transformVAOSAppointment(appt) {
       duration: appt.minutesDuration,
       providers: (providers || []).map(provider => ({
         name: {
-          firstName: provider.firstName,
-          lastName: provider.lastName,
+          firstName: provider.name?.given,
+          lastName: provider.name?.family,
         },
-        display: `${provider.firstName} ${provider.lastName}`,
+        display: `${provider.name?.given} ${provider.name?.family}`,
       })),
       isAtlas,
       atlasLocation: isAtlas ? getAtlasLocation(appt) : null,
@@ -134,12 +120,28 @@ export function transformVAOSAppointment(appt) {
 
   let requestFields = {};
   if (isRequest) {
+    const created = moment.parseZone(appt.created).format('YYYY-MM-DD');
+    const reqPeriods = appt.requestedPeriods.map(d => ({
+      // by passing the format into the moment constructor, we are
+      // preventing the local time zone conversion from occuring
+      // which was causing incorrect dates to be displayed
+      start: `${moment(d.start, 'YYYY-MM-DDTHH:mm:ss').format(
+        'YYYY-MM-DDTHH:mm:ss',
+      )}.000`,
+      end: `${moment(d.end, 'YYYY-MM-DDTHH:mm:ss').format(
+        'YYYY-MM-DDTHH:mm:ss',
+      )}.999`,
+    }));
+    const hasReasonCode = appt.reasonCode?.coding?.length > 0;
+    const reason = hasReasonCode
+      ? PURPOSE_TEXT.find(
+          purpose => purpose.serviceName === appt.reasonCode?.coding?.[0].code,
+        )?.short
+      : null;
     requestFields = {
-      requestedPeriod: appt.requestedPeriods,
-      created: null,
-      reason: PURPOSE_TEXT.find(
-        purpose => purpose.serviceName === appt.reasonCode?.coding[0].code,
-      )?.short,
+      requestedPeriod: reqPeriods,
+      created,
+      reason,
       preferredTimesForPhoneCall: appt.preferredTimesForPhoneCall,
       requestVisitType: getTypeOfVisit(appt.kind),
       type: {
@@ -159,6 +161,7 @@ export function transformVAOSAppointment(appt) {
     };
   }
 
+  // TODO: verfy in RI
   let facilityData;
   if (appt.location && appt.location.attributes) {
     facilityData = transformFacilityV2(appt.location.attributes);
@@ -167,12 +170,12 @@ export function transformVAOSAppointment(appt) {
     resourceType: 'Appointment',
     id: appt.id,
     status: appt.status,
-    cancelationReason: appt.cancelationReason?.coding[0].code || null,
+    cancelationReason: appt.cancelationReason?.coding?.[0].code || null,
     start: !isRequest ? start.format() : null,
     // This contains the vista status for v0 appointments, but
     // we don't have that for v2, so this is a made up status
     description: appt.kind !== 'cc' ? 'VAOS_UNKNOWN' : null,
-    minutesDuration: isNaN(parseInt(appt.minutesDuration, 10))
+    minutesDuration: Number.isNaN(parseInt(appt.minutesDuration, 10))
       ? 60
       : appt.minutesDuration,
     location: {
@@ -192,10 +195,14 @@ export function transformVAOSAppointment(appt) {
         ? {
             practiceName: appt.extension?.ccLocation?.practiceName,
             address: appt.extension?.ccLocation?.address,
-            telecom: null,
-            firstName: null,
-            lastName: null,
-            providerName: null,
+            telecom: appt.extension?.ccLocation?.telecom,
+            providers: (providers || []).map(provider => ({
+              name: {
+                firstName: provider.name?.given,
+                lastName: provider.name?.family,
+              },
+              providerName: `${provider.name?.given} ${provider.name?.family}`,
+            })),
           }
         : null,
     practitioners: appt.practitioners,
@@ -212,6 +219,7 @@ export function transformVAOSAppointment(appt) {
       timeZone: null,
       facilityData,
     },
+    version: 2,
   };
 }
 

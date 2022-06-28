@@ -1,12 +1,10 @@
 import * as Sentry from '@sentry/browser';
 
+import { ADDRESS_POU, FIELD_NAMES } from '@@vap-svc/constants';
+import { showAddressValidationModal, inferAddressType } from '@@vap-svc/util';
 import { apiRequest } from '~/platform/utilities/api';
 import { refreshProfile } from '~/platform/user/profile/actions';
 import recordEvent from '~/platform/monitoring/record-event';
-
-import { ADDRESS_POU, FIELD_NAMES } from '@@vap-svc/constants';
-
-import { showAddressValidationModal, inferAddressType } from '@@vap-svc/util';
 
 import localVAProfileService, {
   isVAProfileServiceConfigured,
@@ -176,6 +174,7 @@ export function createTransaction(
 
       // If the request does not hit the server, apiRequest which is using fetch - will throw an error
       // it will not return back a transaction with errors on it
+      // TODO: use mock server locally instead of isVAProfileServiceConfigured
       const transaction = isVAProfileServiceConfigured()
         ? await apiRequest(route, options)
         : await localVAProfileService.createTransaction();
@@ -324,6 +323,8 @@ export const validateAddress = (
       'profile-section': analyticsSectionName,
       'profile-addressSuggestionUsed': 'no',
     });
+    sessionStorage.setItem('profile-has-cleared-bad-address-indicator', 'true');
+
     // otherwise just send the first suggestion to the API
     return dispatch(
       createTransaction(

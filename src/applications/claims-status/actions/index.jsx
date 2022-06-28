@@ -1,11 +1,12 @@
 import React from 'react';
 import * as Sentry from '@sentry/browser';
-import get from 'platform/utilities/data/get';
+
 import recordEvent from 'platform/monitoring/record-event';
+import { apiRequest } from 'platform/utilities/api';
+import get from 'platform/utilities/data/get';
 import environment from 'platform/utilities/environment';
 import localStorage from 'platform/utilities/storage/localStorage';
-import { apiRequest } from 'platform/utilities/api';
-import { makeAuthRequest, roundToNearest } from '../utils/helpers';
+
 import {
   getErrorStatus,
   USER_FORBIDDEN_ERROR,
@@ -21,6 +22,11 @@ import {
   CHANGE_INDEX_PAGE,
   UNKNOWN_STATUS,
 } from '../utils/appeals-v2-helpers';
+import { makeAuthRequest, roundToNearest } from '../utils/helpers';
+import { mockApi } from '../tests/e2e/fixtures/mocks/mock-api';
+
+// NOTE: This should only be TRUE when developing locally
+const USE_MOCKS = environment.isLocalhost() && !window.Cypress;
 
 // -------------------- v2 and v1 -------------
 export const FETCH_APPEALS_SUCCESS = 'FETCH_APPEALS_SUCCESS';
@@ -54,7 +60,6 @@ export const DONE_UPLOADING = 'DONE_UPLOADING';
 export const SET_PROGRESS = 'SET_PROGRESS';
 export const SET_UPLOAD_ERROR = 'SET_UPLOAD_ERROR';
 export const UPDATE_FIELD = 'UPDATE_FIELD';
-export const SHOW_MAIL_OR_FAX = 'SHOW_MAIL_OR_FAX';
 export const CANCEL_UPLOAD = 'CANCEL_UPLOAD';
 export const SET_FIELDS_DIRTY = 'SET_FIELD_DIRTY';
 export const SHOW_CONSOLIDATED_MODAL = 'SHOW_CONSOLIDATED_MODAL';
@@ -230,7 +235,13 @@ export function getClaimsV2(options = {}) {
   return dispatch => {
     dispatch({ type: FETCH_CLAIMS_PENDING });
 
-    poll({
+    if (USE_MOCKS) {
+      return mockApi.getClaimList().then(mockClaimsList => {
+        return dispatch(fetchClaimsSuccess(mockClaimsList));
+      });
+    }
+
+    return poll({
       onError: response => {
         const errorCode = getErrorStatus(response);
         if (errorCode && errorCode !== UNKNOWN_STATUS) {
@@ -256,7 +267,8 @@ export function getClaimsV2(options = {}) {
             error: errorCode,
           });
         }
-        dispatch({ type: FETCH_CLAIMS_ERROR });
+
+        return dispatch({ type: FETCH_CLAIMS_ERROR });
       },
       onSuccess: response => {
         recordClaimsAPIEvent({
@@ -311,24 +323,24 @@ export function getClaimDetail(id, router, poll = pollRequest) {
     dispatch({
       type: GET_CLAIM_DETAIL,
     });
-    poll({
-      onError: response => {
-        /* Claim status development
-           comment out the next block of code to access the claim status, file &
-           details tabs for development
-        /* * /
+
+    if (USE_MOCKS) {
+      return mockApi.getClaimDetails(id).then(mockDetails => {
         return dispatch({
           type: SET_CLAIM_DETAIL,
-          claim: response.data,
-          meta: response.meta,
+          claim: mockDetails.data,
+          meta: mockDetails.meta,
         });
-        /* */
+      });
+    }
+
+    return poll({
+      onError: response => {
         if (response.status !== 404 || !router) {
-          dispatch({ type: SET_CLAIMS_UNAVAILABLE });
-        } else {
-          router.replace('your-claims');
+          return dispatch({ type: SET_CLAIMS_UNAVAILABLE });
         }
-        /* */
+
+        return router.replace('your-claims');
       },
       onSuccess: response =>
         dispatch({
@@ -572,16 +584,9 @@ export function updateField(path, field) {
   };
 }
 
-export function showMailOrFaxModal(visible) {
-  return {
-    type: SHOW_MAIL_OR_FAX,
-    visible,
-  };
-}
-
 export function cancelUpload() {
   return (dispatch, getState) => {
-    const uploader = getState().disability.status.uploads.uploader;
+    const { uploader } = getState().disability.status.uploads;
     recordEvent({
       event: 'claims-upload-cancel',
     });
