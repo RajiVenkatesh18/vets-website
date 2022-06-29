@@ -8,14 +8,15 @@ import os from 'os';
 import chai from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import chaiDOM from 'chai-dom';
+import sinon from 'sinon';
 import { JSDOM } from 'jsdom';
 import '../../site-wide/moment-setup';
 import ENVIRONMENTS from 'site/constants/environments';
 import * as Sentry from '@sentry/browser';
+import { configure } from '@testing-library/dom';
 import chaiAxe from './axe-plugin';
 
 import { sentryTransport } from './sentry';
-import { configure } from '@testing-library/dom';
 
 Sentry.init({
   autoSessionTracking: false,
@@ -177,6 +178,7 @@ export const mochaHooks = {
     resetFetch();
   },
   afterEach() {
+    sinon.restore(); // Reset all stubs to prevent cross-test leakage
     localStorage.clear();
   },
 };

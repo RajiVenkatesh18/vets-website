@@ -233,7 +233,7 @@
     "sass-loader": "^8.0.2",
     "semver": "^7.3.5",
     "sentry-testkit": "^2.2.1",
-    "sinon": "^3.2.1",
+    "sinon": "^5.1.0",
     "skin-deep": "^1.0.0",
     "stylelint": "^13.13.1",
     "stylelint-order": "^4.1.0",
