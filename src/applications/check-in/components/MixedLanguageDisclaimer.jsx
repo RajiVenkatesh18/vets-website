@@ -5,15 +5,15 @@ import { useTranslation } from 'react-i18next';
 import withTranslationEnabled from '../containers/withTranslationEnabled';
 
 const MixedLanguageDisclaimer = props => {
-  const { spanishDisclaimer } = props; // from feature flag in withTranslationEnabled hook
+  const { spanishDisclaimer, tagalogDisclaimer } = props; // from feature flag in withTranslationEnabled hook
 
   const { t, i18n } = useTranslation();
   const { language } = i18n;
 
   const displaySpanish = language === 'es' && spanishDisclaimer;
-  // const displayTagalog = (language === 'tz' || tagalogDisclaimer)
+  const displayTagalog = language === 'tz' || tagalogDisclaimer;
 
-  return displaySpanish ? (
+  return displaySpanish || displayTagalog ? (
     <div className="vads-u-margin-bottom--2">
       <va-alert status="info" show-icon data-testid="mixed-language-disclaimer">
         <div className="vads-u-margin-top--0">
@@ -28,6 +28,7 @@ const MixedLanguageDisclaimer = props => {
 
 MixedLanguageDisclaimer.propTypes = {
   spanishDisclaimer: PropTypes.bool,
+  tagalogDisclaimer: PropTypes.bool,
 };
 
 export default withTranslationEnabled(MixedLanguageDisclaimer);

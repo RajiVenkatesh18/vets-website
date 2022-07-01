@@ -14,6 +14,7 @@ const withTranslationEnabled = WrappedComponent => props => {
     isTranslationDayOfEnabled,
     isTranslationPreCheckInEnabled,
     isTranslationDisclaimerSpanishEnabled,
+    isTranslationDisclaimerTagalogEnabled,
   } = useSelector(selectFeatureToggles);
 
   if (
@@ -29,6 +30,7 @@ const withTranslationEnabled = WrappedComponent => props => {
     <WrappedComponent
       {...props}
       spanishDisclaimer={isTranslationDisclaimerSpanishEnabled}
+      tagalogDisclaimer={isTranslationDisclaimerTagalogEnabled}
     />
   );
 };

@@ -21,6 +21,9 @@ const selectFeatureToggles = createSelector(
     isTranslationDisclaimerSpanishEnabled: toggleValues(state)[
       FEATURE_FLAG_NAMES.checkInExperienceTranslationDisclaimerSpanishEnabled
     ],
+    isTranslationDisclaimerTagalogEnabled: toggleValues(state)[
+      FEATURE_FLAG_NAMES.checkInExperienceTranslationDisclaimerTagalogEnabled
+    ],
     isDayOfDemographicsFlagsEnabled: toggleValues(state)[
       FEATURE_FLAG_NAMES.checkInExperienceDayOfDemographicsFlagsEnabled
     ],

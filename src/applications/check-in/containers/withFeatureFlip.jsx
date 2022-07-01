@@ -8,6 +8,7 @@ import { makeSelectFeatureToggles } from '../utils/selectors/feature-toggles';
 
 import i18n from '../utils/i18n/i18n';
 import es from '../locales/es/translation.json';
+import tl from '../locales/tl/translation.json';
 
 const withFeatureFlip = (Component, options) => {
   const { isPreCheckIn } = options;
@@ -47,6 +48,7 @@ const withFeatureFlip = (Component, options) => {
       !i18n.getResource('es')
     ) {
       i18n.addResourceBundle('es', 'translation', es);
+      i18n.addResourceBundle('tl', 'translation', tl);
       i18n.reloadResources();
     }
 
