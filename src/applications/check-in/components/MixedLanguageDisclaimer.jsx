@@ -11,7 +11,7 @@ const MixedLanguageDisclaimer = props => {
   const { language } = i18n;
 
   const displaySpanish = language === 'es' && spanishDisclaimer;
-  const displayTagalog = language === 'tz' || tagalogDisclaimer;
+  const displayTagalog = language === 'tl' && tagalogDisclaimer;
 
   return displaySpanish || displayTagalog ? (
     <div className="vads-u-margin-bottom--2">
