@@ -71,7 +71,7 @@ describe('The My VA Dashboard - Notifications', () => {
       mockLocalStorage();
     });
     it('and they have no notifications - C13979', () => {
-      cy.intercept('/v0/onsite_notifications', notificationsSuccessEmpty()).as(
+      cy.intercept('/v0/onsite_notifications', notificationsSuccessEmpty).as(
         'notifications1',
       );
       cy.login(mockUser);
@@ -85,7 +85,7 @@ describe('The My VA Dashboard - Notifications', () => {
     it('and they have a notification - C13025', () => {
       cy.intercept(
         '/v0/onsite_notifications',
-        notificationSuccessNotDismissed(),
+        notificationSuccessNotDismissed,
       ).as('notifications2');
       cy.login(mockUser);
       cy.visit('my-va/');
@@ -99,10 +99,9 @@ describe('The My VA Dashboard - Notifications', () => {
       cy.injectAxeThenAxeCheck('#react-root');
     });
     it('and they have multiple notifications - C16720', () => {
-      cy.intercept(
-        '/v0/onsite_notifications',
-        multipleNotificationSuccess(),
-      ).as('notifications3');
+      cy.intercept('/v0/onsite_notifications', multipleNotificationSuccess).as(
+        'notifications3',
+      );
       cy.login(mockUser);
       cy.visit('my-va/');
       cy.wait(['@featuresB', '@nameB', '@serviceB', '@notifications3']);
@@ -115,10 +114,9 @@ describe('The My VA Dashboard - Notifications', () => {
       cy.injectAxeThenAxeCheck('#react-root'); // First AXE-check already checked the whole
     });
     it('and they have dismissed notifications - C16721', () => {
-      cy.intercept(
-        '/v0/onsite_notifications',
-        notificationSuccessDismissed(),
-      ).as('notifications4');
+      cy.intercept('/v0/onsite_notifications', notificationSuccessDismissed).as(
+        'notifications4',
+      );
       cy.login(mockUser);
       cy.visit('my-va/');
       cy.wait(['@featuresB', '@nameB', '@serviceB', '@notifications4']);
@@ -128,7 +126,7 @@ describe('The My VA Dashboard - Notifications', () => {
       cy.injectAxeThenAxeCheck('#react-root');
     });
     it('and they have a notification error - C16722', () => {
-      cy.intercept('/v0/onsite_notifications', notificationsError()).as(
+      cy.intercept('/v0/onsite_notifications', notificationsError).as(
         'notifications5',
       );
       cy.login(mockUser);
@@ -142,14 +140,14 @@ describe('The My VA Dashboard - Notifications', () => {
     it('and they dismiss a notification - C16723', () => {
       cy.intercept(
         '/v0/onsite_notifications',
-        notificationSuccessNotDismissed(),
+        notificationSuccessNotDismissed,
       ).as('notifications6');
       cy.intercept(
         'PATCH',
         `v0/onsite_notifications/e4213b12-eb44-4b2f-bac5-3384fbde0b7a`,
         {
           statusCode: 200,
-          body: notificationDismissedSuccess(),
+          body: notificationDismissedSuccess,
           delay: 100,
         },
       ).as('patch');
