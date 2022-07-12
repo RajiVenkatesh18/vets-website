@@ -21,9 +21,9 @@ import { mockLocalStorage } from '~/applications/personalization/dashboard/tests
 
 describe('The My VA Dashboard - Notifications', () => {
   // Skipping in CI due to flakes; passes fine locally.
-  before(function() {
-    if (Cypress.env('CI')) this.skip();
-  });
+  // before(function() {
+  //   if (Cypress.env('CI')) this.skip();
+  // });
   // TODO: Fix for CI (try local headless)
   describe('when the feature is hidden', () => {
     beforeEach(() => {
