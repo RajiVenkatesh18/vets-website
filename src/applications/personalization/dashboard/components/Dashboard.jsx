@@ -219,7 +219,8 @@ const Dashboard = ({
             <div className="vads-l-grid-container vads-u-padding-x--1 vads-u-padding-bottom--3 medium-screen:vads-u-padding-x--2 medium-screen:vads-u-padding-bottom--4">
               <DashboardHeader
                 paymentsError={paymentsError}
-                showNotifications={showNotifications}
+                // eslint-disable-next-line react/jsx-boolean-value
+                showNotifications={true}
               />
 
               {showMPIConnectionError ? (
