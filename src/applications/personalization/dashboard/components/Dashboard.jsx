@@ -110,7 +110,7 @@ const DashboardHeader = ({ showNotifications, paymentsError }) => {
           </div>
         </DashboardWidgetWrapper>
       )}
-      {showNotifications && <Notifications />}
+      {true && <Notifications />}
     </div>
   );
 };
