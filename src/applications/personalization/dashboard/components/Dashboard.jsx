@@ -84,6 +84,7 @@ const DashboardHeader = ({ showNotifications, paymentsError }) => {
       >
         My VA
       </h1>
+      <Notifications />
       <CTALink
         href="/profile"
         text="Go to your profile"
