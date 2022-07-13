@@ -48,13 +48,12 @@ export const Notifications = ({
           </div>
         </DashboardWidgetWrapper>
       )}
-      {!notificationsError &&
-        debtNotifications.map((n, i) => (
-          <div>
-            <p>{JSON.stringify(debtNotifications)}</p>
-            <p>{String(notificationsError)}</p>
-          </div>
-        ))}
+      {true && (
+        <div>
+          <p>{JSON.stringify(debtNotifications)}</p>
+          <p>{String(notificationsError)}</p>
+        </div>
+      )}
     </div>
   );
 };
