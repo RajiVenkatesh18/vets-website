@@ -50,7 +50,10 @@ export const Notifications = ({
       )}
       {!notificationsError &&
         debtNotifications.map((n, i) => (
-          <p>{JSON.stringify(debtNotifications)}</p>
+          <div>
+            <p>{JSON.stringify(debtNotifications)}</p>
+            <p>{String(notificationsError)}</p>
+          </div>
         ))}
     </div>
   );
