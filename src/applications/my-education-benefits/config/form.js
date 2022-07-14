@@ -478,7 +478,7 @@ const formConfig = {
                       if (!isValidName(field)) {
                         if (field.length === 0) {
                           errors.addError('Please enter your first name');
-                        } else if (field[0] === ' ') {
+                        } else if (field[0] === ' ' || field[0] === "'") {
                           errors.addError(
                             'First character must be a letter with no leading space.',
                           );
@@ -499,7 +499,7 @@ const formConfig = {
                       if (!isValidLastName(field)) {
                         if (field.length === 0) {
                           errors.addError('Please enter your last name');
-                        } else if (field[0] === ' ') {
+                        } else if (field[0] === ' ' || field[0] === "'") {
                           errors.addError(
                             'First character must be a letter with no leading space.',
                           );
@@ -520,7 +520,7 @@ const formConfig = {
                       if (!isValidName(field)) {
                         if (field.length === 0) {
                           errors.addError('Please enter your middle name');
-                        } else if (field[0] === ' ') {
+                        } else if (field[0] === ' ' || field[0] === "'") {
                           errors.addError(
                             'First character must be a letter with no leading space.',
                           );
