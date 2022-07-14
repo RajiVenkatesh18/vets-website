@@ -183,7 +183,7 @@ function isOnlyWhitespace(str) {
 }
 
 function isValidName(str) {
-  return str && /^[A-Za-z][A-Za-z '-]*$/.test(str);
+  return str && /^[A-Za-z][A-Za-z ']*$/.test(str);
 }
 
 function isValidLastName(str) {
@@ -484,7 +484,7 @@ const formConfig = {
                           );
                         } else {
                           errors.addError(
-                            'Please enter a valid entry. Acceptable entries are letters, spaces and apostrophes.',
+                            'Please enter a valid entry. Acceptable entries are letters, spaces, and apostrophes.',
                           );
                         }
                       }
@@ -505,7 +505,7 @@ const formConfig = {
                           );
                         } else {
                           errors.addError(
-                            'Please enter a valid entry. Acceptable entries are letters, spaces and apostrophes.',
+                            'Please enter a valid entry. Acceptable entries are letters, spaces, dashes, and apostrophes.',
                           );
                         }
                       }
@@ -526,7 +526,7 @@ const formConfig = {
                           );
                         } else {
                           errors.addError(
-                            'Please enter a valid entry. Acceptable entries are letters, spaces and apostrophes.',
+                            'Please enter a valid entry. Acceptable entries are letters, spaces, and apostrophes.',
                           );
                         }
                       }
