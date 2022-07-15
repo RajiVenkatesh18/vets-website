@@ -54,6 +54,8 @@ export const Notifications = ({
           <p>{String(notificationsError)}</p>
         </div>
       )}
+      {console.log('asdakdsakadskdasdaksdkaskdk')}
+      {console.log(JSON.stringify(debtNotifications))}
     </div>
   );
 };

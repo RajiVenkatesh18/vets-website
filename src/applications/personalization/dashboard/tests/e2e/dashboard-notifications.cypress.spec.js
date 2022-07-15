@@ -89,7 +89,7 @@ describe('The My VA Dashboard - Notifications', () => {
       ).as('notifications2');
       cy.login(mockUser);
       cy.visit('my-va/');
-      cy.wait(['@featuresB', '@nameB', '@serviceB', '@notifications2']);
+      // cy.wait(['@featuresB', '@nameB', '@serviceB', '@notifications2']);
       // cy.findByTestId('dashboard-notifications').should('exist');
       cy.findAllByTestId('dashboard-notification-alert').should(
         'have.length',
