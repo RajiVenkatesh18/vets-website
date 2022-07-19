@@ -18,20 +18,20 @@ module.exports = async (on, config) => {
     on('file:preprocessor', require('@cypress/code-coverage/use-babelrc'));
   }
 
-  on('before:browser:launch', (browser, launchOptions) => {
-    console.log('launching browser %o', browser)
+  // on('before:browser:launch', (browser, launchOptions) => {
+  //   console.log('launching browser %o', browser)
 
-    // only load React DevTools extension
-    // when opening Chrome in interactive mode
-      // we could also restrict the extension
-      // to only load when "browser.isHeaded" is true
-      const extensionFolder = path.resolve(__dirname, 'rr')
+  //   // only load React DevTools extension
+  //   // when opening Chrome in interactive mode
+  //     // we could also restrict the extension
+  //     // to only load when "browser.isHeaded" is true
+  //     const extensionFolder = path.resolve(__dirname, 'rr')
 
-      console.log('adding React DevTools extension from', extensionFolder)
-      launchOptions.args.push(`--load-extension=${extensionFolder}`)
+  //     console.log('adding React DevTools extension from', extensionFolder)
+  //     launchOptions.args.push(`--load-extension=${extensionFolder}`)
 
-      return launchOptions
-  })
+  //     return launchOptions
+  // })
 
   let appRegistry;
   if (fs.existsSync('../content-build/src/applications/registry.json')) {
