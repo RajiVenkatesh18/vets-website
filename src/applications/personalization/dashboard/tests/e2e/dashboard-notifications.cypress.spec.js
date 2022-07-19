@@ -5,6 +5,8 @@
  * @testrailinfo groupId 3376
  * @testrailinfo runName MyVA On-site Notification - Debt
  */
+import { addDays } from 'date-fns';
+
 import { mockUser } from '@@profile/tests/fixtures/users/user';
 import serviceHistory from '@@profile/tests/fixtures/service-history-success.json';
 import fullName from '@@profile/tests/fixtures/full-name-success.json';
@@ -14,10 +16,30 @@ import {
   notificationSuccessDismissed,
   notificationDismissedSuccess,
   notificationsSuccessEmpty,
-  notificationSuccessNotDismissed,
+  // notificationSuccessNotDismissed,
   multipleNotificationSuccess,
 } from '../fixtures/test-notifications-response';
 import { mockLocalStorage } from '~/applications/personalization/dashboard/tests/e2e/dashboard-e2e-helpers';
+Cypress.on('window:before:load', (win) => {
+  // this lets React DevTools "see" components inside application's iframe
+  win.__REACT_DEVTOOLS_GLOBAL_HOOK__ = window.top.__REACT_DEVTOOLS_GLOBAL_HOOK__
+})
+const notificationSuccessNotDismissed = {
+  data: [
+    {
+      id: 'e4213b12-eb44-4b2f-bac5-3384fbde0b7a',
+      type: 'onsite_notifications',
+      attributes: {
+        templateId: 'f9947b27-df3b-4b09-875c-7f76594d766d',
+        vaProfileId: '1273780',
+        dismissed: false,
+        createdAt: addDays(new Date(), -3),
+        updatedAt: undefined,
+      },
+    },
+  ],
+};
+
 
 describe('The My VA Dashboard - Notifications', () => {
   // Skipping in CI due to flakes; passes fine locally.
@@ -42,7 +64,7 @@ describe('The My VA Dashboard - Notifications', () => {
       cy.visit('my-va/');
       cy.wait(['@featuresA', '@nameA', '@serviceA']);
     });
-    it('the notifications does not show up - C13978', () => {
+    it.skip('the notifications does not show up - C13978', () => {
       // make sure that the Notification section is not shown
       cy.findByTestId('dashboard-notifications').should('not.exist');
 
@@ -70,7 +92,7 @@ describe('The My VA Dashboard - Notifications', () => {
       cy.intercept('/v0/profile/full_name', fullName).as('nameB');
       mockLocalStorage();
     });
-    it('and they have no notifications - C13979', () => {
+    it.skip('and they have no notifications - C13979', () => {
       cy.intercept('/v0/onsite_notifications', notificationsSuccessEmpty).as(
         'notifications1',
       );
@@ -88,8 +110,16 @@ describe('The My VA Dashboard - Notifications', () => {
         notificationSuccessNotDismissed,
       ).as('notifications2');
       cy.login(mockUser);
-      cy.visit('my-va/');
-      // cy.wait(['@featuresB', '@nameB', '@serviceB', '@notifications2']);
+      cy.visit('my-va/', {
+        onBeforeLoad(win) {
+          // this lets React DevTools "see" components inside application's iframe
+          win.__REACT_DEVTOOLS_GLOBAL_HOOK__ = window.top.__REACT_DEVTOOLS_GLOBAL_HOOK__
+        },
+      })
+      cy.wait('@featuresB');
+      cy.wait('@nameB');
+      cy.wait('@serviceB');
+      cy.wait('@notifications2');
       // cy.findByTestId('dashboard-notifications').should('exist');
       cy.findAllByTestId('dashboard-notification-alert').should(
         'have.length',
@@ -98,7 +128,7 @@ describe('The My VA Dashboard - Notifications', () => {
       // make the a11y check
       cy.injectAxeThenAxeCheck('#react-root');
     });
-    it('and they have multiple notifications - C16720', () => {
+    it.skip('and they have multiple notifications - C16720', () => {
       cy.intercept('/v0/onsite_notifications', multipleNotificationSuccess).as(
         'notifications3',
       );
@@ -113,7 +143,7 @@ describe('The My VA Dashboard - Notifications', () => {
       // make the a11y check
       cy.injectAxeThenAxeCheck('#react-root'); // First AXE-check already checked the whole
     });
-    it('and they have dismissed notifications - C16721', () => {
+    it.skip('and they have dismissed notifications - C16721', () => {
       cy.intercept('/v0/onsite_notifications', notificationSuccessDismissed).as(
         'notifications4',
       );
@@ -125,7 +155,7 @@ describe('The My VA Dashboard - Notifications', () => {
       // make the a11y check
       cy.injectAxeThenAxeCheck('#react-root');
     });
-    it('and they have a notification error - C16722', () => {
+    it.skip('and they have a notification error - C16722', () => {
       cy.intercept('/v0/onsite_notifications', notificationsError).as(
         'notifications5',
       );
@@ -137,7 +167,7 @@ describe('The My VA Dashboard - Notifications', () => {
       // make the a11y check
       cy.injectAxeThenAxeCheck('#react-root');
     });
-    it('and they dismiss a notification - C16723', () => {
+    it.skip('and they dismiss a notification - C16723', () => {
       cy.intercept(
         '/v0/onsite_notifications',
         notificationSuccessNotDismissed,

@@ -97,7 +97,7 @@ const DashboardHeader = ({ showNotifications, paymentsError }) => {
           });
         }}
       />
-      {paymentsError && (
+      {true && (
         <DashboardWidgetWrapper>
           <div
             className="vads-u-display--flex vads-u-flex-direction--column large-screen:vads-u-flex--1 vads-u-margin-top--2p5"
