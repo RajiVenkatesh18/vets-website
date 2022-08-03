@@ -108,7 +108,7 @@ jobs:
           env_variable_name: MAPBOX_TOKEN
 
       - name: Build
-        run:  NODE_OPTIONS=--max-old-space-size=10240 yarn webpack --config config/webpack.config.js --env buildtype=${{ env.BUILDTYPE }}
+        run:  NODE_OPTIONS=--max-old-space-size=16384 yarn webpack --config config/webpack.config.js --env buildtype=${{ env.BUILDTYPE }}
         timeout-minutes: 30
 
       - name: Compress and archive build
