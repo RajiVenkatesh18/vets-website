@@ -1,15 +1,15 @@
 name: E2E Tests
 
-on:
-  workflow_dispatch:
-    inputs:
-      commit_sha:
-        description: Run the full E2E test suite on a specific commit
-        required: true
-  workflow_run:
-    workflows: [Continuous Integration]
-    types: [completed]
-    branches: [main]
+on: [push]
+  # workflow_dispatch:
+  #   inputs:
+  #     commit_sha:
+  #       description: Run the full E2E test suite on a specific commit
+  #       required: true
+  # workflow_run:
+  #   workflows: [Continuous Integration]
+  #   types: [completed]
+  #   branches: [main]
 
 env:
   NUM_CONTAINERS: '8'
@@ -88,11 +88,11 @@ jobs:
           path: |
             .cache/yarn
             node_modules
-      # Temporarily disabled due to apparent memory issues caused by code coverage tools 
-      # - name: Add istanbul for Cypress code coverage reporting
-      #   run: |
-      #     sed -i -e 's/\"istanbul\",//g' babel.config.json
-      #     sed -i -e 's/\"lodash\",/\"lodash\", \"istanbul\",/g' babel.config.json
+
+      - name: Add istanbul for Cypress code coverage reporting
+        run: |
+          sed -i -e 's/\"istanbul\",//g' babel.config.json
+          sed -i -e 's/\"lodash\",/\"lodash\", \"istanbul\",/g' babel.config.json
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -108,7 +108,7 @@ jobs:
           env_variable_name: MAPBOX_TOKEN
 
       - name: Build
-        run: yarn build --verbose --buildtype=${{ env.BUILDTYPE }}
+        run:  NODE_OPTIONS=--max-old-space-size=10240 yarn webpack --config config/webpack.config.js --env buildtype=${{ env.BUILDTYPE }}
         timeout-minutes: 30
 
       - name: Compress and archive build
@@ -211,9 +211,8 @@ jobs:
       - name: Start server
         run: node src/platform/testing/e2e/test-server.js --buildtype=${{ env.BUILDTYPE }} --port=3001 &
 
-      # Temporarily disabled due to apparent memory issues caused by code coverage tools
-      # - name: Instrument code
-      #   run: npx nyc instrument --compact=false src .nyc_output
+      - name: Instrument code
+        run: npx nyc instrument --compact=false src .nyc_output
 
       - name: Run Cypress tests
         run: node script/github-actions/run-cypress-tests.js
@@ -225,17 +224,15 @@ jobs:
           TESTS: ${{ needs.cypress-tests-prep.outputs.tests }}
           APP_URLS: ''
 
-      # Temporarily disabled due to apparent memory issues caused by code coverage tools
-      # - name: View code coverage summary
-      #   run: npx nyc report --reporter=text-summary
+      - name: View code coverage summary
+        run: npx nyc report --reporter=text-summary
 
-      # Temporarily disabled due to apparent memory issues caused by code coverage tools
-      # - name: Create coverage artifact
-      #   uses: actions/upload-artifact@v3
-      #   if: ${{ always() }}
-      #   with:
-      #     name: code-coverage-artifacts
-      #     path: coverage/coverage-summary.json
+      - name: Create coverage artifact
+        uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: code-coverage-artifacts
+          path: coverage/coverage-summary.json
 
       - name: Archive test videos
         uses: actions/upload-artifact@v3
@@ -497,24 +494,24 @@ jobs:
         with:
           ref: ${{ needs.set-commit-sha.outputs.COMMIT_SHA }}
 
-      - name: Notify Slack - \#status-vets-website
-        uses: ./.github/workflows/slack-notify
-        continue-on-error: true
-        env:
-          SSL_CERT_DIR: /etc/ssl/certs
-        with:
-          payload: '{"attachments": [{"color": "#FF0800","blocks": [{"type": "section","text": {"type": "mrkdwn","text": "@qa-standards-team Full E2E test suite run in `vets-website` failed: <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{github.run_id}}>"}}]}]}'
-          channel_id: ${{ env.VETS_WEBSITE_CHANNEL_ID }}
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      # - name: Notify Slack - \#status-vets-website
+      #   uses: ./.github/workflows/slack-notify
+      #   continue-on-error: true
+      #   env:
+      #     SSL_CERT_DIR: /etc/ssl/certs
+      #   with:
+      #     payload: '{"attachments": [{"color": "#FF0800","blocks": [{"type": "section","text": {"type": "mrkdwn","text": "@qa-standards-team Full E2E test suite run in `vets-website` failed: <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{github.run_id}}>"}}]}]}'
+      #     channel_id: ${{ env.VETS_WEBSITE_CHANNEL_ID }}
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: Notify Slack - \#gha-test-status
-        uses: ./.github/workflows/slack-notify
-        continue-on-error: true
-        env:
-          SSL_CERT_DIR: /etc/ssl/certs
-        with:
-          payload: '{"attachments": [{"color": "#FF0800","blocks": [{"type": "section","text": {"type": "mrkdwn","text": "Full E2E test suite run in `vets-website` failed: <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{github.run_id}}>"}}]}]}'
-          channel_id: C026PD47Z19 #gha-test-status
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      # - name: Notify Slack - \#gha-test-status
+      #   uses: ./.github/workflows/slack-notify
+      #   continue-on-error: true
+      #   env:
+      #     SSL_CERT_DIR: /etc/ssl/certs
+      #   with:
+      #     payload: '{"attachments": [{"color": "#FF0800","blocks": [{"type": "section","text": {"type": "mrkdwn","text": "Full E2E test suite run in `vets-website` failed: <https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}|${{github.run_id}}>"}}]}]}'
+      #     channel_id: C026PD47Z19 #gha-test-status
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
