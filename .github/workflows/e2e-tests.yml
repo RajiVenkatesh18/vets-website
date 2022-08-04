@@ -77,12 +77,9 @@ jobs:
     steps:
       - name: Swap test
         run: |
-          fallocate -l 16G /swapfile
-          chmod 600 /swapfile
-          mkswap /swapfile
-          swapon /swapfile
-          swapon --show
-          free -h
+          dd if=/dev/zero of=/media/fasthdd/swapfile.img bs=10240 count=1M
+          mkswap /media/fasthdd/swapfile.img
+          swapon /media/fasthdd/swapfile.img
 
       - name: Checkout
         uses: actions/checkout@v3
