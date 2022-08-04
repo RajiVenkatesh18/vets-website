@@ -77,11 +77,11 @@ jobs:
     steps:
       - name: Swap test
         run: |
-          sudo fallocate -l 16G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-          sudo swapon --show
+          fallocate -l 16G /swapfile
+          chmod 600 /swapfile
+          mkswap /swapfile
+          swapon /swapfile
+          swapon --show
           free -h
 
       - name: Checkout
