@@ -169,6 +169,7 @@
     "cy-tr-reporter": "^1.2.5",
     "cypress": "^10.4.0",
     "cypress-axe": "^1.0.0",
+    "cypress-log-to-output": "^1.1.2",
     "cypress-multi-reporters": "^1.5.0",
     "cypress-plugin-tab": "^1.0.5",
     "cypress-real-events": "^1.7.1",
