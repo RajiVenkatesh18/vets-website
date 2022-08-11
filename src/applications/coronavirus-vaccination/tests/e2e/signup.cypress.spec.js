@@ -9,7 +9,7 @@ describe('COVID-19 Vaccination Preparation Form', () => {
       );
     });
 
-    it('should successfully submit the vaccine preparation form test', () => {
+    it('should successfully submit the vaccine preparation form', () => {
       const stayInformedPage = new StayInformedPage();
 
       // Intro page
