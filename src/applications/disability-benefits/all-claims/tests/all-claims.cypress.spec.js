@@ -207,7 +207,7 @@ const testConfig = createTestConfig(
       });
     },
 
-    // skip: [],
+    skip: false,
   },
   manifest,
   formConfig,

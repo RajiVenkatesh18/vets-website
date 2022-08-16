@@ -270,7 +270,6 @@ for doing very specific things.
 
 ## Supported Browsers
 
-
 | Browser                   | Minimum version | Note                                   |
 | :------------------------ | :-------------: | :------------------------------------- |
 | Internet Explorer         |       11        |                                        |
