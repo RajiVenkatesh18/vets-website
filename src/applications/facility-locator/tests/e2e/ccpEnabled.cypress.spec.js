@@ -17,6 +17,7 @@ describe('Facility Search - CCP (community care providers) enabled', () => {
     cy.visit('/find-locations/');
 
     cy.injectAxe();
+
     cy.axeCheck();
     cy.get('#facility-type-dropdown')
       .select(CC_PROVIDER)

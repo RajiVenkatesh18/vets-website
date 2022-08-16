@@ -38,7 +38,7 @@ describe('COVID-19 Vaccination Preparation Form', () => {
         { field: /Year/i, value: '1950', clear: true },
         { field: /Email address/i, value: 'test@example.com', clear: true },
         { field: /Phone/i, value: '8005551234', clear: true },
-        { field: /Zip code/i, value: '10001', clear: true },
+        { field: /Zip code/i, value: '10002', clear: true },
       ]);
 
       stayInformedPage.submitForm();

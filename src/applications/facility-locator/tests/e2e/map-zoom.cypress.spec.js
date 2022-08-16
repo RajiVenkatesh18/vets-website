@@ -38,7 +38,7 @@ Cypress.Commands.add('verifySearchArea', () => {
 
   // Verify search area button text changed back
   cy.get('#search-area-control').contains('Search this area of the map');
-  cy.get('#search-area-control').click();
+  cy.get('#search-area-control').click({ force: true });
 
   // Move from area
   cy.get('.mapboxgl-canvas').swipe(
