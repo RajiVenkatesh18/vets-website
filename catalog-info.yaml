@@ -6,6 +6,7 @@ metadata:
   description: This is the front end for VA.gov.
   annotations:
     github.com/project-slug: department-of-veterans-affairs/vets-website
+    lighthouse.com/website-url: https://www.va.gov
   tags:
     - javascript
     - sass
