@@ -29,6 +29,7 @@ context('when user is LOA1', () => {
     cy.visit(PROFILE_PATHS.PROFILE_ROOT);
   });
   it('should only have access to the Account Security section and not call personal data APIs', () => {
+    cy.injectAxe();
     // should show a loading indicator
     cy.findByRole('progressbar').should('exist');
     cy.findByText(/loading your information/i).should('exist');

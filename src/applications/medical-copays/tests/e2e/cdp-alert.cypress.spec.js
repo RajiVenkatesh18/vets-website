@@ -21,6 +21,7 @@ describe('Medical Copays - CDP Alerts', () => {
     cy.visit('/health-care/pay-copay-bill/your-current-balances/');
     cy.findByTestId('overview-page-title').should('exist');
     cy.injectAxe();
+    cy.axeCheck();
     cy.findByTestId(`balance-card-${id}`).should('exist');
     cy.findByTestId(`amount-${id}`).contains('$15.00');
     cy.findByTestId(`facility-city-${id}`).contains(
