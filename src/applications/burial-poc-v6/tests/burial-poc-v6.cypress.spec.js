@@ -4,7 +4,7 @@ import testForm from 'platform/testing/e2e/cypress/support/form-tester';
 import { createTestConfig } from 'platform/testing/e2e/cypress/support/form-tester/utilities';
 
 import manifest from '../manifest.json';
-
+// test
 const testConfig = createTestConfig(
   {
     dataPrefix: 'data',

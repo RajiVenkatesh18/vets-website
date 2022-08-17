@@ -39,7 +39,7 @@ export const mockSecondaryCaregiverContent = [
   'I understand that the Veteran or the Veteran\u2019s surrogate may request my discharge from the Program of Comprehensive Assistance for Family Caregivers (PCAFC) at any time and that my designation as a Secondary Family Caregiver may be revoked or I may be discharged from PCAFC by the Secretary of Veterans Affairs (or designee) as set forth in 38 CFR 71.45.',
   'I understand that participation in the PCAFC does not create an employment relationship between me and the Department of Veterans Affairs.',
 ];
-
+// test
 const checkContent = (partyLabel, content, mockContent) => {
   content.forEach((contentItem, idx) => {
     cy.get(`[data-testid="${partyLabel}"]`)

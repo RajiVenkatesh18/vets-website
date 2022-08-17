@@ -3,7 +3,7 @@ import Timeouts from 'platform/testing/e2e/timeouts';
 import burial1234 from './e2e/fixtures/mocks/burial-1234.json';
 import burialPost from './e2e/fixtures/mocks/burial-post.json';
 import testData from './schema/maximal-test.json';
-
+// test
 describe('Burial claim test', () => {
   it('Fills out and submits the form', () => {
     cy.intercept('GET', '/v0/burial_claims/1234', burial1234);

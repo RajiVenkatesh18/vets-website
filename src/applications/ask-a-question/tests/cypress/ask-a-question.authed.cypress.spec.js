@@ -10,6 +10,7 @@ import mockUser from './fixtures/mocks/mockUser.json';
 import inProgressForms from './fixtures/mocks/in-progress-forms.json';
 
 // `appName`, `arrayPages`, and `rootUrl` don't need to be explicitly defined.
+// test
 const testConfig = createTestConfig(
   {
     dataPrefix: 'data',

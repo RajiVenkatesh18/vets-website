@@ -10,7 +10,6 @@ describe('Chapter 31 LOA1 authentication gate', () => {
     cy.visit(CHAPTER_31_ROOT_URL);
 
     cy.injectAxe();
-
     cy.findByRole('heading', {
       name: /Verify your identity to apply for VR&E benefits/i,
     }).should('exist');
