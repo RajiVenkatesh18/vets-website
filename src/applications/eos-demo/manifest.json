@@ -1,0 +1,7 @@
+{
+  "appName": "EOS-Demo",
+  "entryFile": "./app-entry.jsx",
+  "entryName": "eos-demo",
+  "rootUrl": "/eos-demo",
+  "productId": "5f74fd1b-eaca-4711-b47e-31ddc9dbc8b2"
+}
