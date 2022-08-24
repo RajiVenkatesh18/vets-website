@@ -1,5 +1,5 @@
 const path = require('path');
-const setupLocalProxyRewrite = require('../src/applications/proxy-rewrite/local-proxy-rewrite');
+const setupLocalProxyRewrite = require('../../src/applications/proxy-rewrite/local-proxy-rewrite');
 const manifestHelpers = require('./manifest-helpers');
 
 function generateWebpackDevConfig(buildOptions) {
@@ -29,7 +29,7 @@ function generateWebpackDevConfig(buildOptions) {
     static: {
       directory: path.resolve(
         __dirname,
-        '../',
+        '../../',
         'build',
         buildOptions.destination,
       ),
