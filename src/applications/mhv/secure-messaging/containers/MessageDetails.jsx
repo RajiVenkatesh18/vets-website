@@ -3,6 +3,8 @@ import NavigationLinks from '../components/NavigationLinks';
 import MessageActionButtons from '../components/MessageActionsButtons';
 import OlderMessages from '../components/OlderMessages';
 import Breadcrumbs from '../components/shared/Breadcrumbs';
+import attachedJPG from '../mockAttachment/Attachment.jpg';
+import attachedPNG from '../mockAttachment/Attachment.png';
 
 const MessageDetail = () => {
   const from = 'Dunwoody, Ann E. (My HealtheVet Questions_PugetSound_ADMIN)';
@@ -104,11 +106,24 @@ const MessageDetail = () => {
                 <i className="fa fa-paperclip attachment-icon" />
               </div>
               <div className="">
-                <a href="/message">
+                <a href={attachedJPG} target="_blank" rel="noreferrer noopener">
                   {
-                    'This is an attachment that I uploaded from my laptop.pdf (108.7 KB) '
+                    'This is an attachment that I uploaded from my laptop.jpg (108.7 KB) '
                   }{' '}
                 </a>
+              </div>
+              <div className="vads-u-padding-right--1">
+                <i className="fa fa-paperclip attachment-icon" />
+              </div>
+              <div className="">
+                <a href={attachedPNG} target="_blank" rel="noreferrer noopener">
+                  {
+                    'This is an attachment that I uploaded from my laptop.png (108.7 KB) '
+                  }{' '}
+                </a>
+              </div>
+              <div className="vads-u-padding-right--1">
+                <i className="fa fa-paperclip attachment-icon" />
               </div>
             </div>
           </div>

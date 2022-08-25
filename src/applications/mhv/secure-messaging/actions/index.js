@@ -7,11 +7,15 @@ This is also where GA events may be fired for successful / unsuccessful api call
 
 // import recordEvent from 'platform/monitoring/record-event';
 // import { apiRequest } from 'platform/utilities/api';
+// import { getAPI } from '../../../facility-locator/config';
+import React from 'react';
 import mockData from '../tests/fixtures/messages-response.json';
 
 export const MESSAGES_RETREIVE_STARTED = 'MESSAGES_RETREIVE_STARTED';
 export const MESSAGES_RETREIVE_SUCCEEDED = 'MESSAGES_RETREIVE_SUCCEEDED';
 export const MESSAGES_RETREIVE_FAILED = 'MESSAGES_RETREIVE_FAILED';
+export const MESSAGE_DELETE = 'MESSAGE_DELETE';
+export const SHOW_ATTACHMENT = 'SHOW_ATTACHMENT';
 
 // const SECURE_MESSAGES_URI = '/mhv/messages';
 
@@ -51,4 +55,53 @@ export const getAllMessages = () => async dispatch => {
       response,
     });
   }
+};
+
+// eslint-disable-next-line spaced-comment
+export const deleteMessage = (/*id*/) => async dispatch => {
+  // eslint-disable-next-line no-console
+  console.log('delete message');
+  dispatch({ type: MESSAGE_DELETE });
+
+  /*
+  const api = getAPI();
+  const url = `${api.baseUrl}/messages/${id}`;
+  */
+
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(mockData);
+    }, 1500);
+  });
+
+  /*
+  API CALL FOR WHEN WE CAN HIT BACKEND
+  return new Promise((resolve, reject) => {
+    fetch(url, api.settings)
+      .then(res => res.json())
+      .then(error => reject(error));
+  });
+  */
+};
+
+export const viewAttachment = (/* msgId , attId */) => async dispatch => {
+  // eslint-disable-next-line no-console
+  console.log('view attachment');
+  dispatch({ type: SHOW_ATTACHMENT });
+
+  /*
+  const api = getAPI();
+  const url = `${api.baseUrl}/messages/${msgId}/attachment/${attId}`;
+  */
+
+  return <i className="fa fa-paperclip attachment-icon" />;
+
+  /*
+  API CALL FOR WHEN WE CAN HIT BACKEND
+  return new Promise((resolve, reject) => {
+    fetch(url, api.settings)
+      .then(res => res.json())
+      .then(error => reject(error));
+  });
+  */
 };
