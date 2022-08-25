@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const HtmlPlugin = require('html-webpack-plugin');
 const facilitySidebar = require('@department-of-veterans-affairs/platform-landing-pages/facility-sidebar');
 const headerFooterData = require('@department-of-veterans-affairs/platform-landing-pages/header-footer-data');
@@ -51,6 +52,25 @@ function generateHtmlFiles(buildPath, scaffoldAssets) {
     return [...styleTags, ...scriptTags].join('');
   };
 
+  /**
+   * Check for the presence of a local application template
+   * @return {string} - Path to template used
+   */
+
+  const getTemplateLocation = entryName => {
+    const globalTemplatePath = 'src/platform/landing-pages/dev-template.ejs';
+    const localTemplatePath = `src/applications/${entryName}/dev/template.ejs`;
+    let devTemplatePath;
+
+    if (fs.existsSync(localTemplatePath)) {
+      devTemplatePath = localTemplatePath;
+    } else {
+      devTemplatePath = globalTemplatePath;
+    }
+
+    return devTemplatePath;
+  };
+
   /* eslint-disable no-nested-ternary */
   const generateHtmlFile = ({
     appName,
@@ -65,7 +85,7 @@ function generateHtmlFiles(buildPath, scaffoldAssets) {
       filename: path.join(buildPath, rootUrl, 'index.html'),
       inject: false,
       scriptLoading: 'defer',
-      template: 'src/platform/landing-pages/dev-template.ejs',
+      template: getTemplateLocation(entryName),
       templateParameters: {
         // Menu and navigation content
         headerFooterData,
