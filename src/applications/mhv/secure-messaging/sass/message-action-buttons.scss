@@ -1,5 +1,11 @@
 @import "~@department-of-veterans-affairs/formation/sass/shared-variables";
 
-VaModal{
-  color: $color-black;
+.message-actions-buttons-modal{
+  .form-radio-buttons {
+    padding-left: 15px;
+  }
+  // .modal-body{
+  //   width: 600px;
+  //   background-color: $color-white;
+  // }
 }

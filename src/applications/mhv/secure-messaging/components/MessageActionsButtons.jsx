@@ -33,7 +33,6 @@ const MessageActionButtons = () => {
   };
 
   const handleConfirmMoveFolderTo = () => {
-    // console.log('will be moving message to: ', moveToFolder);
     setIsModalVisible(false);
   };
 
@@ -54,20 +53,23 @@ const MessageActionButtons = () => {
         className="message-action-button"
         onClick={openMoveModal}
       >
-        {isModalVisible ? (
-          <>
-            <VaModal
-              large
-              // clickToClose --closes modal if user clicks outside of modal
-              initialFocusSelector="Move to"
-              modalTitle="Move to:"
-              onCloseEvent={closeMoveModal}
-              onPrimaryButtonClick={handleConfirmMoveFolderTo}
-              onSecondaryButtonClick={closeMoveModal}
-              primaryButtonText="Confirm"
-              secondaryButtonText="Cancel"
-              visible={isModalVisible}
-            >
+        <i className="fas fa-folder" />
+        <span className="message-action-button-text">Move</span>
+      </button>
+      {isModalVisible ? (
+        <div className="message-actions-buttons-modal">
+          <VaModal
+            id="move-to-modal"
+            large
+            modalTitle="Move to:"
+            onCloseEvent={closeMoveModal}
+            onPrimaryButtonClick={handleConfirmMoveFolderTo}
+            onSecondaryButtonClick={closeMoveModal}
+            primaryButtonText="Confirm"
+            secondaryButtonText="Cancel"
+            visible={isModalVisible}
+          >
+            <div className="modal-body">
               <p>
                 This conversation will be moved. Any replies to this message
                 will appear in your inbox
@@ -90,14 +92,10 @@ const MessageActionButtons = () => {
                 </div>
               ))}
               <p>Moving Message to: {moveToFolder}</p>
-            </VaModal>
-          </>
-        ) : null}
-
-        <i className="fas fa-folder" />
-        <span className="message-action-button-text">Move</span>
-      </button>
-
+            </div>
+          </VaModal>
+        </div>
+      ) : null}
       <button type="button" className="message-action-button">
         <i className="fas fa-reply" />
         <span className="message-action-button-text">Reply</span>
