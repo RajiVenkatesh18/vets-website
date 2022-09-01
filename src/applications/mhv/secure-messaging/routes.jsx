@@ -5,7 +5,6 @@ import Compose from './containers/Compose';
 import MessageDetail from './containers/MessageDetails';
 import MessageReply from './containers/MessageReply';
 import SearchMessages from './containers/SearchMessages';
-import Attachment from './containers/Attachment';
 
 const routes = (
   <Switch>
@@ -14,7 +13,6 @@ const routes = (
     <Route path="/message" component={MessageDetail} />
     <Route path="/reply" component={MessageReply} />
     <Route path="/search" component={SearchMessages} />
-    <Route path="/attachment" component={Attachment} />
   </Switch>
 );
 
