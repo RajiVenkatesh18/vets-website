@@ -5,9 +5,7 @@ import { fetchAllFolders } from '../actions/index';
 
 const MessageActionButtons = () => {
   const dispatch = useDispatch();
-  const { isLoading, folders, error } = useSelector(
-    state => state?.allMessages,
-  );
+  const { isLoading, folders, error } = useSelector(state => state?.reducer);
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [moveToFolder, setMoveToFolder] = useState('');
