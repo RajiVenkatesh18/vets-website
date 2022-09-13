@@ -32,4 +32,9 @@ jobs:
         with:
           python-version: 3.9
 
+      - name: Clone devops repo
+        uses: actions/checkout@v2
+        with:
+         repository: department-of-veterans-affairs/devops
+         ref: master
 
