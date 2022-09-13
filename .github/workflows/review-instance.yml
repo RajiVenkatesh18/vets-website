@@ -35,6 +35,6 @@ jobs:
       - name: Clone devops repo
         uses: actions/checkout@v2
         with:
-         repository: department-of-veterans-affairs/devops
+         repository: department-of-veterans-affairs/devops.git
          ref: master
 
