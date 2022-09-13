@@ -32,9 +32,23 @@ jobs:
         with:
           python-version: 3.9
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: "us-gov-west-1"
+
+      - name: Obtain GitHub Token
+        uses: marvinpinto/action-inject-ssm-secrets@latest
+        with:
+          ssm_parameter: /devops/VA_VSP_BOT_GITHUB_TOKEN
+          env_variable_name: VA_VSP_BOT_GITHUB_TOKEN
+
       - name: Clone devops repo
         uses: actions/checkout@v2
         with:
-         repository: department-of-veterans-affairs/devops.git
+         repository: department-of-veterans-affairs/devops
          ref: master
+         token: ${{ env.VA_VSP_BOT_GITHUB_TOKEN }}
 
