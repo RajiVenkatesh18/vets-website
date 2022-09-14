@@ -53,6 +53,10 @@ jobs:
          token: ${{ env.VA_VSP_BOT_GITHUB_TOKEN }}
       - name: Run Ansible
         run: |
+           cd ansible
+           tar zxf venv.tgz
+           rm -rf venv.tgz
+           virtualenv venv
            source venv/bin/activate && ansible-playbook \
            -e web_branch=${{github.event.inputs.web_branch}} \
            -e api_branch=${{github.event.inputs.api_branch}} \
