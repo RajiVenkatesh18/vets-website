@@ -40,7 +40,13 @@ const AttachmentsList = props => {
                 </div>
               )}
               {!editingEnabled && (
-                <a href="/">
+                <a
+                  href="/"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  // Replace with api call when ready VVV
+                  download="https://www.vba.va.gov/pubs/forms/VBA-20-0995-ARE.pdf"
+                >
                   {file.name} ({getSize(file.size || file.attachmentSize)})
                 </a>
               )}
