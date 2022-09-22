@@ -3,7 +3,7 @@ import environment from 'platform/utilities/environment';
 
 export const CLAIMANT_INFO_ENDPOINT = `${
   environment.API_URL
-}/meb_api/v0/forms_claimaint_info`;
+}/meb_api/v0/forms_claimant_info`;
 
 export const FETCH_PERSONAL_INFORMATION = 'FETCH_PERSONAL_INFORMATION';
 export const FETCH_PERSONAL_INFORMATION_SUCCESS =
@@ -14,7 +14,7 @@ export const UPDATE_PERSONAL_INFO = 'UPDATE_PERSONAL_INFO';
 
 export const SPONSORS_ENDPOINT = `${
   environment.API_URL
-}/meb_api/v0/forms_claimaint_info`;
+}/meb_api/v0/forms_claimant_info`;
 export const FETCH_SPONSORS = 'FETCH_SPONSORS';
 export const FETCH_SPONSORS_SUCCESS = 'FETCH_SPONSORS_SUCCESS';
 export const FETCH_SPONSORS_FAILED = 'FETCH_SPONSORS_FAILED';
