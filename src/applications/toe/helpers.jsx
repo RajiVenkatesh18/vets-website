@@ -104,7 +104,7 @@ export function prefillTransformer(pages, formData, metadata, state) {
     sponsors,
     formId: state.data?.formData?.data?.id,
     claimantId: claimant.claimantId,
-    'view:userFullName': {
+    [formFields.viewUserFullName]: {
       userFullName: {
         first: claimant.firstName || undefined,
         middle: claimant.middleName || undefined,
@@ -116,11 +116,11 @@ export function prefillTransformer(pages, formData, metadata, state) {
       email: contactInfo.emailAddress,
       confirmEmail: contactInfo.emailAddress,
     },
-    'view:phoneNumbers': {
-      mobilePhoneNumber: {
+    [formFields.viewPhoneNumbers]: {
+      [formFields.mobilePhoneNumber]: {
         phone: contactInfo?.mobilePhoneNumber || undefined,
       },
-      phoneNumber: {
+      [formFields.phoneNumber]: {
         phone: contactInfo?.homePhoneNumber || undefined,
       },
     },

@@ -7,8 +7,8 @@ import RoutedSavableApp from 'platform/forms/save-in-progress/RoutedSavableApp';
 import { setData } from 'platform/forms-system/src/js/actions';
 
 import formConfig from '../config/form';
-import { fetchSponsors } from '../actions';
-import { mapFormSponsors } from '../helpers';
+import { fetchSponsors, fetchPersonalInformation } from '../actions';
+import { mapFormSponsors, prefillTransformer } from '../helpers';
 import { SPONSORS_TYPE } from '../constants';
 
 function ToeApp({
@@ -21,15 +21,28 @@ function ToeApp({
   sponsorsInitial,
   sponsorsSavedState,
   user,
+  claimantInfo,
+  getPersonalInformation,
 }) {
+  const [fetchedPersonalInfo, setFetchedPersonalInfo] = useState(false);
   const [fetchedSponsors, setFetchedSponsors] = useState(false);
-
+  useEffect(
+    () => {
+      // if (!user?.login?.currentlyLoggedIn) {
+      //   return;
+      // }
+      if (!fetchedPersonalInfo) {
+        setFetchedPersonalInfo(true);
+        getPersonalInformation();
+      }
+    },
+    [fetchedPersonalInfo, getPersonalInformation],
+  );
   useEffect(
     () => {
       if (!user?.login?.currentlyLoggedIn) {
         return;
       }
-
       if (!fetchedSponsors) {
         setFetchedSponsors(true);
         getSponsors();
@@ -45,6 +58,7 @@ function ToeApp({
       }
     },
     [
+      claimantInfo,
       fetchedSponsors,
       formData,
       getSponsors,
@@ -75,7 +89,9 @@ function ToeApp({
 
 ToeApp.propTypes = {
   children: PropTypes.object,
+  claimantInfo: PropTypes.object,
   formData: PropTypes.object,
+  getPersonalInformation: PropTypes.func,
   getSponsors: PropTypes.func,
   location: PropTypes.object,
   setFormData: PropTypes.func,
@@ -95,10 +111,12 @@ const mapStateToProps = state => ({
   sponsorsInitial: state?.data?.sponsors,
   sponsorsSavedState: state.form?.loadedData?.formData?.sponsors,
   user: state.user,
+  claimantInfo: prefillTransformer(null, null, null, state),
 });
 
 const mapDispatchToProps = {
   getSponsors: fetchSponsors,
+  getPersonalInformation: fetchPersonalInformation,
   setFormData: setData,
 };
 

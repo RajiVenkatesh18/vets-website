@@ -49,6 +49,7 @@ export const formFields = {
   selectedSponsors: 'selectedSponsors',
   sponsorDateOfBirth: 'sponsorDateOfBirth',
   sponsorFullName: 'sponsorFullName',
+  viewUserFullName: 'view:userFullName',
   userFullName: 'userFullName',
   viewPhoneNumbers: 'view:phoneNumbers',
   viewReceiveTextMessages: 'view:receiveTextMessages',
