@@ -2,6 +2,9 @@ import { createSaveInProgressFormReducer } from 'platform/forms/save-in-progress
 import formConfig from './config/form';
 
 import {
+  FETCH_PERSONAL_INFORMATION,
+  FETCH_PERSONAL_INFORMATION_SUCCESS,
+  FETCH_PERSONAL_INFORMATION_FAILED,
   FETCH_SPONSORS,
   FETCH_SPONSORS_FAILED,
   FETCH_SPONSORS_SUCCESS,
@@ -14,6 +17,7 @@ const initialState = {
     selectedSponsors: [],
     someoneNotListed: undefined,
     sponsors: {},
+    claimant: {},
   },
   form: {
     data: {},
@@ -34,8 +38,8 @@ export default {
         return {
           ...state,
           fetchedSponsorsComplete: true,
-          sponsors: {
-            sponsors: [
+          toeSponsors: {
+            transferOfEntitlements: [
               ...state.sponsors,
               // {
               //   id: '1',
@@ -63,6 +67,18 @@ export default {
         return {
           ...state,
           sponsors: action.payload,
+        };
+      case FETCH_PERSONAL_INFORMATION:
+        return {
+          ...state,
+          fetchedPersonalInformation: true,
+        };
+      case FETCH_PERSONAL_INFORMATION_SUCCESS:
+      case FETCH_PERSONAL_INFORMATION_FAILED:
+        return {
+          ...state,
+          fetchedPersonalInfoComplete: true,
+          claimant: {},
         };
       default:
         return state;

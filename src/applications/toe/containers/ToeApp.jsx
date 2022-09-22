@@ -7,13 +7,14 @@ import RoutedSavableApp from 'platform/forms/save-in-progress/RoutedSavableApp';
 import { setData } from 'platform/forms-system/src/js/actions';
 
 import formConfig from '../config/form';
-import { fetchSponsors } from '../actions';
+import { fetchSponsors, fetchPersonalInformation } from '../actions';
 import { mapFormSponsors } from '../helpers';
 import { SPONSORS_TYPE } from '../constants';
 
 function ToeApp({
   children,
   formData,
+  getPersonalInformation,
   getSponsors,
   location,
   setFormData,
@@ -23,6 +24,7 @@ function ToeApp({
   user,
 }) {
   const [fetchedSponsors, setFetchedSponsors] = useState(false);
+  const [fetchedPersonalInfo, setFetchedPersonalInfo] = useState(false);
 
   useEffect(
     () => {
@@ -43,11 +45,17 @@ function ToeApp({
       } else if (sponsorsInitial && !sponsors) {
         setFormData(mapFormSponsors(formData, sponsorsInitial));
       }
+      if (!fetchedPersonalInfo) {
+        setFetchedPersonalInfo(true);
+        getPersonalInformation();
+      }
     },
     [
       fetchedSponsors,
       formData,
       getSponsors,
+      fetchedPersonalInfo,
+      getPersonalInformation,
       location,
       setFormData,
       sponsors,
@@ -75,7 +83,9 @@ function ToeApp({
 
 ToeApp.propTypes = {
   children: PropTypes.object,
+  claimant: PropTypes.object,
   formData: PropTypes.object,
+  getPersonalInformation: PropTypes.func,
   getSponsors: PropTypes.func,
   location: PropTypes.object,
   setFormData: PropTypes.func,
@@ -91,6 +101,8 @@ const mapStateToProps = state => ({
   claimant: state.data?.formData?.data?.attributes?.claimant,
   fetchedSponsors: state.data?.fetchedSponsors,
   fetchedSponsorsComplete: state.data?.fetchedSponsorsComplete,
+  fetchedPersonalInfo: state.data?.fetchedPersonalInfo,
+  setFetchedPersonalInfoComplete: state.data?.fetchedPersonalInfoComplete,
   sponsors: state.form?.data?.sponsors,
   sponsorsInitial: state?.data?.sponsors,
   sponsorsSavedState: state.form?.loadedData?.formData?.sponsors,
@@ -98,8 +110,9 @@ const mapStateToProps = state => ({
 });
 
 const mapDispatchToProps = {
-  getSponsors: fetchSponsors,
   setFormData: setData,
+  getPersonalInformation: fetchPersonalInformation,
+  getSponsors: fetchSponsors,
 };
 
 export default connect(

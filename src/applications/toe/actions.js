@@ -10,10 +10,7 @@ export const FETCH_PERSONAL_INFORMATION_SUCCESS =
   'FETCH_PERSONAL_INFORMATION_SUCCESS';
 export const FETCH_PERSONAL_INFORMATION_FAILED =
   'FETCH_PERSONAL_INFORMATION_FAILED';
-export const FETCH_MILITARY_INFORMATION_SUCCESS =
-  'FETCH_MILITARY_INFORMATION_SUCCESS';
-export const FETCH_MILITARY_INFORMATION_FAILED =
-  'FETCH_MILITARY_INFORMATION_FAILED';
+export const UPDATE_PERSONAL_INFO = 'UPDATE_PERSONAL_INFO';
 
 export const SPONSORS_ENDPOINT = `${
   environment.API_URL
@@ -70,6 +67,9 @@ export function updateSponsors(sponsors) {
   return { type: UPDATE_SPONSORS, payload: sponsors };
 }
 
+export function updatePersonalInfo(claimant) {
+  return { type: UPDATE_PERSONAL_INFO, payload: claimant };
+}
 // const poll = ({
 //   endpoint,
 //   validate = response => response && response.data,
