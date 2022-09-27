@@ -193,10 +193,10 @@ export const getEnrollmentVerificationStatus = status => {
 const mapEnrollmentVerificationForSubmission = (ev, evIndex, status) => {
   const enrollmentVerification = ev.enrollmentVerifications[evIndex];
   return {
-    claimandId: ev.claimantId,
+    claimandId: ev.claimantId || '',
     enrollmentCertifyRequests: [
       {
-        claimandId: ev.claimantId,
+        claimandId: ev.claimantId || '',
         certifiedPeriodBeginDate: enrollmentVerification.certifiedBeginDate,
         certifiedPeriodEndDate: enrollmentVerification.certifiedEndDate,
         certifiedThroughDate: enrollmentVerification.certifiedEndDate,
