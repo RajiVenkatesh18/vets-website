@@ -1,3 +1,4 @@
+import environment from 'platform/utilities/environment';
 import AccountSecurity from './components/account-security/AccountSecurity';
 import ContactInformation from './components/contact-information/ContactInformation';
 import PersonalInformation from './components/personal-information/PersonalInformation';
@@ -6,9 +7,16 @@ import DirectDeposit from './components/direct-deposit/DirectDeposit';
 import ConnectedApplications from './components/connected-apps/ConnectedApps';
 import NotificationSettings from './components/notification-settings/NotificationSettings';
 import { PROFILE_PATHS, PROFILE_PATH_NAMES } from './constants';
+import Sandbox from './components/sandbox/Sandbox';
+
+const mergeRoutesForEnv = (baseRoutes, localRoutes) => {
+  return environment.isLocalhost()
+    ? [...baseRoutes, ...localRoutes]
+    : baseRoutes;
+};
 
 const getRoutes = () => {
-  return [
+  const baseRoutes = [
     {
       component: PersonalInformation,
       name: PROFILE_PATH_NAMES.PERSONAL_INFORMATION,
@@ -59,6 +67,17 @@ const getRoutes = () => {
       requiresMVI: true,
     },
   ];
+
+  const localRoutes = [
+    {
+      component: Sandbox,
+      name: 'Sandbox Page',
+      path: '/profile/local-sandbox',
+      requiresLOA3: false,
+      requiresMVI: false,
+    },
+  ];
+  return mergeRoutesForEnv(baseRoutes, localRoutes);
 };
 
 export default getRoutes;
