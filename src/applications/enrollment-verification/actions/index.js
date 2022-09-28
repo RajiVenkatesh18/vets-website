@@ -61,9 +61,7 @@ export function postEnrollmentVerifications(vs) {
 
     return apiRequest(VERIFICATION_STATUS_ENDPOINT, {
       method: 'POST',
-      body: JSON.stringify({
-        enrollmentVerifications: vs,
-      }),
+      body: JSON.stringify(vs),
       headers: { 'Content-Type': 'application/json' },
     })
       .then(response =>
