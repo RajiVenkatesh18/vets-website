@@ -2,6 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import environment from 'platform/utilities/environment';
 
+import { FIELD_NAMES } from 'platform/user/profile/vap-svc/constants';
 import { selectVAProfilePersonalInformation } from '../../selectors';
 
 const SandboxReduxExample = () => {
@@ -10,7 +11,7 @@ const SandboxReduxExample = () => {
   );
 
   const { preferredName } = useSelector(state =>
-    selectVAProfilePersonalInformation(state, 'preferredName'),
+    selectVAProfilePersonalInformation(state, FIELD_NAMES.PREFERRED_NAME),
   );
 
   return (
