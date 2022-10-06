@@ -1,5 +1,6 @@
 /* This file is must run in both NodeJS and browser environments */
 
+import { apiRequest } from 'platform/utilities/api';
 import { getFlipperId } from './helpers';
 
 const FLIPPER_ID = getFlipperId();
@@ -18,7 +19,7 @@ function FlipperClient({
   const csrfTokenStored = localStorage.getItem('csrfToken');
 
   const _fetchToggleValues = async () => {
-    const response = await fetch(`${host}${toggleValuesPath}`, {
+    const response = await apiRequest(`${host}${toggleValuesPath}`, {
       credentials: 'include',
       headers: {
         'X-CSRF-Token': csrfTokenStored,
