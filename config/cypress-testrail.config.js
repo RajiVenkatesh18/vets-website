@@ -19,6 +19,7 @@ const cypressConfig = {
     groupId: 'TR_GROUPID',
     filter: 'TR_FILTER',
   },
+  video: false,
   e2e: {
     setupNodeEvents(on, config) {
       return require('../src/platform/testing/e2e/cypress/plugins/index')(
