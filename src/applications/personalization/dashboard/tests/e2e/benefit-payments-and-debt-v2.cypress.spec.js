@@ -2,7 +2,7 @@
  * [TestRail-integrated] Spec for My VA - Benefits Payments & Debt V2
  * @testrailinfo projectId 4
  * @testrailinfo suiteId 5
- * @testrailinfo groupId 3426
+ * @testrailinfo groupId 5892
  * @testrailinfo runName My VA - Pmt Info v2
  */
 import { mockUser } from '@@profile/tests/fixtures/users/user';
@@ -35,6 +35,7 @@ import { mockLocalStorage } from '~/applications/personalization/dashboard/tests
 
 describe('The My VA Dashboard - Payments and Debt', () => {
   beforeEach(() => {
+    Cypress.config('requestTimeout', 30000);
     mockLocalStorage();
     cy.login(mockUser);
     cy.intercept('/v0/profile/service_history', serviceHistory);
@@ -419,7 +420,7 @@ describe('when the payment history claims does not exist', () => {
       },
     }).as('featuresC');
   });
-  it('the v2 dashboard shows up', () => {
+  it('the v2 dashboard shows up - C22832', () => {
     cy.visit('my-va/');
     // should show a loading indicator
     cy.findByRole('progressbar').should('exist');
@@ -464,7 +465,7 @@ describe('when the payment history claims is false', () => {
       },
     }).as('featuresD');
   });
-  it('the v2 dashboard should show up', () => {
+  it('the v2 dashboard should show up - C22831', () => {
     cy.visit('my-va/');
     // should show a loading indicator
     cy.findByRole('progressbar').should('exist');
