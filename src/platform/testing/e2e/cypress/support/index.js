@@ -45,9 +45,9 @@ Cypress.Commands.overwrite('clear', (originalFn, element) => {
 });
 
 Cypress.on('uncaught:exception', (err, runnable) => {
-  if (err.message.includes('attribute not defined')) {
-    return false;
-  }
+  expect(err.message.includes('of undefined'))
+  return false
+
 
 });
 
