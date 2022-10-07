@@ -44,8 +44,11 @@ Cypress.Commands.overwrite('clear', (originalFn, element) => {
   return originalFn(element, { delay: 0 });
 });
 
-Cypress.on('uncaught:exception', () => {
-  return false;
+Cypress.on('uncaught:exception', (err, runnable) => {
+  if (err.message.includes('list not defined')) {
+    return false;
+  }
+
 });
 
 // Default responses for common endpoints called by most apps.
